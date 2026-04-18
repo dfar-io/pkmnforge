@@ -47,6 +47,21 @@ export async function fetchPokemonDetail(id: number): Promise<PokemonDetail> {
   return detail;
 }
 
+const typeIdsCache = new Map<PokemonType, Set<number>>();
+export async function fetchPokemonIdsByType(type: PokemonType): Promise<Set<number>> {
+  const cached = typeIdsCache.get(type);
+  if (cached) return cached;
+  const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+  const data = await res.json();
+  const ids = new Set<number>();
+  for (const entry of data.pokemon as { pokemon: { url: string } }[]) {
+    const id = Number(entry.pokemon.url.split("/").filter(Boolean).pop());
+    if (Number.isInteger(id) && id > 0 && id <= MAX_DEX) ids.add(id);
+  }
+  typeIdsCache.set(type, ids);
+  return ids;
+}
+
 export function formatName(name: string): string {
   return name
     .split("-")

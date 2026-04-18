@@ -9,11 +9,15 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   fetchPokemonDetail,
+  fetchPokemonIdsByType,
   fetchPokemonList,
   formatName,
   type PokemonDetail,
   type PokemonListItem,
 } from "@/lib/pokeapi";
+import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
+import { TypeIcon } from "./TypeBadge";
+import { cn } from "@/lib/utils";
 import { TypeBadge } from "./TypeBadge";
 
 interface PokemonPickerProps {
@@ -30,6 +34,9 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingPick, setLoadingPick] = useState<number | null>(null);
+  const [activeType, setActiveType] = useState<PokemonType | null>(null);
+  const [typeIds, setTypeIds] = useState<Set<number> | null>(null);
+  const [typeLoading, setTypeLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -41,15 +48,38 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     if (!open) {
       setQuery("");
       setVisibleCount(PAGE_SIZE);
+      setActiveType(null);
+      setTypeIds(null);
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!activeType) {
+      setTypeIds(null);
+      return;
+    }
+    let cancelled = false;
+    setTypeLoading(true);
+    fetchPokemonIdsByType(activeType)
+      .then((ids) => {
+        if (!cancelled) setTypeIds(ids);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setTypeLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeType]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = list.filter((p) => !excludeIds.includes(p.id));
+    let base = list.filter((p) => !excludeIds.includes(p.id));
+    if (activeType && typeIds) base = base.filter((p) => typeIds.has(p.id));
     if (!q) return base;
     return base.filter((p) => p.name.includes(q) || String(p.id) === q);
-  }, [list, query, excludeIds]);
+  }, [list, query, excludeIds, activeType, typeIds]);
 
   const visible = filtered.slice(0, visibleCount);
 
@@ -65,7 +95,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => io.disconnect();
   }, [filtered.length, visibleCount]);
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeType, typeIds]);
 
   const handleSelect = async (id: number) => {
     setLoadingPick(id);
