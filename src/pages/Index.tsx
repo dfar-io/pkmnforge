@@ -134,7 +134,7 @@ const Index = () => {
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               <h1 className="font-display text-xl font-extrabold tracking-tight">
-                Team<span className="text-primary">Forge</span>
+                Pkmn<span className="text-primary">Forge</span>
               </h1>
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
