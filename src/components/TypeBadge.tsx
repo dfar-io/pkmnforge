@@ -39,7 +39,7 @@ export const TypeIcon = ({ type, className }: TypeIconProps) => {
     <span
       className={cn(
         "inline-grid place-items-center rounded-full text-primary-foreground shadow-sm ring-1 ring-background/60",
-        "h-5 w-5",
+        "h-6 w-6",
         `bg-type-${type}`,
         className,
       )}
@@ -47,7 +47,7 @@ export const TypeIcon = ({ type, className }: TypeIconProps) => {
       aria-label={TYPE_LABEL[type]}
       role="img"
     >
-      <Glyph className="h-3 w-3" />
+      <Glyph className="h-3.5 w-3.5" />
     </span>
   );
 };
