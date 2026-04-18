@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
+import { TYPE_ICONS } from "./type-icons";
 
 interface TypeBadgeProps {
   type: PokemonType;
@@ -27,43 +28,26 @@ interface TypeIconProps {
   className?: string;
 }
 
-// Disambiguates types sharing a first letter so the single-letter glyph stays readable.
-const TYPE_GLYPH: Record<PokemonType, string> = {
-  normal: "N",
-  fire: "Fi",
-  water: "W",
-  electric: "E",
-  grass: "G",
-  ice: "I",
-  fighting: "Ft",
-  poison: "P",
-  ground: "Gd",
-  flying: "Fl",
-  psychic: "Ps",
-  bug: "B",
-  rock: "R",
-  ghost: "Gh",
-  dragon: "D",
-  dark: "Dk",
-  steel: "S",
-  fairy: "Fa",
-};
-
 /**
- * Compact circular type indicator. Use when horizontal space is too tight
- * for the text `TypeBadge` (e.g. inside team slots on mobile).
+ * Compact circular type indicator using a custom SVG glyph.
+ * Use when horizontal space is too tight for the text `TypeBadge`
+ * (e.g. inside team slots on mobile).
  */
-export const TypeIcon = ({ type, className }: TypeIconProps) => (
-  <span
-    className={cn(
-      "inline-grid place-items-center rounded-full text-primary-foreground font-display font-bold shadow-sm ring-1 ring-background/60",
-      "h-4 w-4 text-[8px] leading-none",
-      `bg-type-${type}`,
-      className,
-    )}
-    title={TYPE_LABEL[type]}
-    aria-label={TYPE_LABEL[type]}
-  >
-    {TYPE_GLYPH[type]}
-  </span>
-);
+export const TypeIcon = ({ type, className }: TypeIconProps) => {
+  const Glyph = TYPE_ICONS[type];
+  return (
+    <span
+      className={cn(
+        "inline-grid place-items-center rounded-full text-primary-foreground shadow-sm ring-1 ring-background/60",
+        "h-5 w-5",
+        `bg-type-${type}`,
+        className,
+      )}
+      title={TYPE_LABEL[type]}
+      aria-label={TYPE_LABEL[type]}
+      role="img"
+    >
+      <Glyph className="h-3 w-3" />
+    </span>
+  );
+};
