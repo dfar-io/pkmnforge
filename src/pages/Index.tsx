@@ -137,7 +137,7 @@ const Index = () => {
             team={team}
             onLoad={(members) => setTeam(members.slice(0, TEAM_SIZE))}
             onShare={handleShare}
-            onClear={clearAll}
+            onClear={requestClear}
             justCopied={justCopied}
           />
         </div>
