@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { fetchPokemonDetail, type PokemonDetail } from "@/lib/pokeapi";
+import { getNatureByCode, getNatureById } from "@/lib/natures";
 
 const STORAGE_KEY = "pkmnforge.team.v1";
+const NATURES_STORAGE_KEY = "pkmnforge.natures.v1";
 const LEGACY_STORAGE_KEYS = ["teamforge.team.v1"] as const;
+
+export type NatureMap = Record<number, string>;
 
 // Parse `?team=1,4,7` into a list of valid dex IDs (deduped, capped to teamSize).
 const parseTeamFromQuery = (teamSize: number): number[] => {
@@ -26,10 +30,26 @@ const parseTeamFromQuery = (teamSize: number): number[] => {
   }
 };
 
-// Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
-// Performs a one-time migration from legacy keys to the current STORAGE_KEY.
-// If `?team=` is present in the URL, we defer to the async hydration effect
-// and start empty so the URL-shared team wins over stored team.
+// Parse `?natures=25:ad,6:jo` — a comma list of `dexId:natureCode` pairs.
+const parseNaturesFromQuery = (): NatureMap => {
+  if (typeof window === "undefined") return {};
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("natures");
+    if (!raw) return {};
+    const out: NatureMap = {};
+    for (const part of raw.split(",")) {
+      const [idStr, code] = part.split(":");
+      const id = Number(idStr?.trim());
+      const nature = code ? getNatureByCode(code.trim()) : undefined;
+      if (Number.isInteger(id) && id > 0 && nature) out[id] = nature.id;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
 const loadStoredTeam = (teamSize: number): PokemonDetail[] => {
   if (typeof window === "undefined") return [];
   if (parseTeamFromQuery(teamSize).length > 0) return [];
@@ -70,27 +90,59 @@ const loadStoredTeam = (teamSize: number): PokemonDetail[] => {
   }
 };
 
+// Stored as a flat `{ [pokemonId]: natureId }` map, which lets natures persist
+// across reorders and removals without having to update parallel arrays.
+const loadStoredNatures = (): NatureMap => {
+  if (typeof window === "undefined") return {};
+  if (parseTeamFromQuery(6).length > 0) return {};
+  try {
+    const raw = window.localStorage.getItem(NATURES_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    const out: NatureMap = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const id = Number(k);
+      if (Number.isInteger(id) && id > 0 && typeof v === "string" && getNatureById(v)) {
+        out[id] = v;
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
 /**
- * Manages team state with localStorage persistence and one-time hydration
- * from a `?team=1,4,7` URL query param. The URL param wins on first load
- * and is stripped after hydration so subsequent edits aren't shadowed.
+ * Manages team + per-Pokémon nature state with localStorage persistence and
+ * one-time hydration from `?team=` (and optional `?natures=`) query params.
+ * The URL params win on first load and are stripped after hydration.
  */
 export const useTeam = (teamSize: number) => {
   const [team, setTeam] = useState<PokemonDetail[]>(() => loadStoredTeam(teamSize));
+  const [natures, setNatures] = useState<NatureMap>(() => loadStoredNatures());
 
-  // Persist on every change.
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(team));
     } catch {
-      // Storage may be unavailable (quota / private mode) — silently ignore.
+      /* ignore */
     }
   }, [team]);
 
-  // One-time hydration from `?team=` query string.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(NATURES_STORAGE_KEY, JSON.stringify(natures));
+    } catch {
+      /* ignore */
+    }
+  }, [natures]);
+
+  // One-time hydration from `?team=` (and `?natures=`) query string.
   useEffect(() => {
     const ids = parseTeamFromQuery(teamSize);
     if (ids.length === 0) return;
+    const sharedNatures = parseNaturesFromQuery();
     let cancelled = false;
     (async () => {
       try {
@@ -101,12 +153,16 @@ export const useTeam = (teamSize: number) => {
         const valid = details.filter((d): d is PokemonDetail => Boolean(d));
         if (valid.length > 0) {
           setTeam(valid.slice(0, teamSize));
+          if (Object.keys(sharedNatures).length > 0) {
+            setNatures((prev) => ({ ...prev, ...sharedNatures }));
+          }
           toast.success(`Loaded shared team (${valid.length})`);
         }
       } finally {
         if (!cancelled) {
           const url = new URL(window.location.href);
           url.searchParams.delete("team");
+          url.searchParams.delete("natures");
           window.history.replaceState({}, "", url.pathname + url.search + url.hash);
         }
       }
@@ -117,5 +173,14 @@ export const useTeam = (teamSize: number) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return [team, setTeam] as const;
+  const setNature = (pokemonId: number, natureId: string | null) => {
+    setNatures((prev) => {
+      const next = { ...prev };
+      if (!natureId) delete next[pokemonId];
+      else next[pokemonId] = natureId;
+      return next;
+    });
+  };
+
+  return { team, setTeam, natures, setNatures, setNature } as const;
 };
