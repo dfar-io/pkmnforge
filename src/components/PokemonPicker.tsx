@@ -9,11 +9,15 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   fetchPokemonDetail,
+  fetchPokemonIdsByType,
   fetchPokemonList,
   formatName,
   type PokemonDetail,
   type PokemonListItem,
 } from "@/lib/pokeapi";
+import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
+import { TypeIcon } from "./TypeBadge";
+import { cn } from "@/lib/utils";
 import { TypeBadge } from "./TypeBadge";
 
 interface PokemonPickerProps {
@@ -30,6 +34,9 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingPick, setLoadingPick] = useState<number | null>(null);
+  const [activeType, setActiveType] = useState<PokemonType | null>(null);
+  const [typeIds, setTypeIds] = useState<Set<number> | null>(null);
+  const [typeLoading, setTypeLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -41,15 +48,38 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     if (!open) {
       setQuery("");
       setVisibleCount(PAGE_SIZE);
+      setActiveType(null);
+      setTypeIds(null);
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!activeType) {
+      setTypeIds(null);
+      return;
+    }
+    let cancelled = false;
+    setTypeLoading(true);
+    fetchPokemonIdsByType(activeType)
+      .then((ids) => {
+        if (!cancelled) setTypeIds(ids);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setTypeLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeType]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const base = list.filter((p) => !excludeIds.includes(p.id));
+    let base = list.filter((p) => !excludeIds.includes(p.id));
+    if (activeType && typeIds) base = base.filter((p) => typeIds.has(p.id));
     if (!q) return base;
     return base.filter((p) => p.name.includes(q) || String(p.id) === q);
-  }, [list, query, excludeIds]);
+  }, [list, query, excludeIds, activeType, typeIds]);
 
   const visible = filtered.slice(0, visibleCount);
 
@@ -65,7 +95,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => io.disconnect();
   }, [filtered.length, visibleCount]);
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeType, typeIds]);
 
   const handleSelect = async (id: number) => {
     setLoadingPick(id);
@@ -107,10 +137,51 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
           </div>
         </div>
 
+        {/* Type filter chips */}
+        <div className="px-3 pb-2">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+            {POKEMON_TYPES.map((t) => {
+              const active = activeType === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setActiveType(active ? null : t)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground ring-2 ring-primary/40"
+                      : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                  aria-pressed={active}
+                  title={`Filter by ${TYPE_LABEL[t]}`}
+                >
+                  <TypeIcon type={t} className="h-4 w-4 ring-0" />
+                  <span className="hidden xs:inline">{TYPE_LABEL[t]}</span>
+                </button>
+              );
+            })}
+            {activeType && (
+              <button
+                type="button"
+                onClick={() => setActiveType(null)}
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
-          {list.length === 0 ? (
+          {list.length === 0 || (activeType && typeLoading && !typeIds) ? (
             <div className="grid h-full place-items-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="grid h-full place-items-center text-muted-foreground text-sm">
+              No Pokémon match
             </div>
           ) : (
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
