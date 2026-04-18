@@ -25,6 +25,7 @@ import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
+import { SavedTeamsMenu } from "@/components/SavedTeamsMenu";
 import type { PokemonDetail } from "@/lib/pokeapi";
 import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
@@ -278,33 +279,36 @@ const Index = () => {
               Build & analyze your Pokémon squad
             </p>
           </div>
-          {team.length > 0 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="text-muted-foreground hover:text-primary"
-                aria-label="Copy shareable team link"
-              >
-                {justCopied ? (
-                  <Check className="h-4 w-4 mr-1 text-success" />
-                ) : (
-                  <Share2 className="h-4 w-4 mr-1" />
-                )}
-                {justCopied ? "Copied" : "Share"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAll}
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Clear
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-1 flex-wrap justify-end">
+            <SavedTeamsMenu team={team} onLoad={(members) => setTeam(members.slice(0, TEAM_SIZE))} />
+            {team.length > 0 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="text-muted-foreground hover:text-primary"
+                  aria-label="Copy shareable team link"
+                >
+                  {justCopied ? (
+                    <Check className="h-4 w-4 mr-1 text-success" />
+                  ) : (
+                    <Share2 className="h-4 w-4 mr-1" />
+                  )}
+                  {justCopied ? "Copied" : "Share"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAll}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Clear
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
