@@ -31,10 +31,34 @@ const TEAM_SIZE = 6;
 const STORAGE_KEY = "pkmnforge.team.v1";
 const LEGACY_STORAGE_KEYS = ["teamforge.team.v1"] as const;
 
+// Parse `?team=1,4,7` into a list of valid dex IDs (deduped, capped to TEAM_SIZE).
+const parseTeamFromQuery = (): number[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("team");
+    if (!raw) return [];
+    const ids: number[] = [];
+    for (const part of raw.split(",")) {
+      const n = Number(part.trim());
+      if (Number.isInteger(n) && n > 0 && n <= 1025 && !ids.includes(n)) {
+        ids.push(n);
+      }
+      if (ids.length >= TEAM_SIZE) break;
+    }
+    return ids;
+  } catch {
+    return [];
+  }
+};
+
 // Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
 // Performs a one-time migration from legacy keys to the current STORAGE_KEY.
+// If `?team=` is present in the URL, we defer to the async hydration effect
+// and start empty so the URL-shared team wins over stored team.
 const loadStoredTeam = (): PokemonDetail[] => {
   if (typeof window === "undefined") return [];
+  if (parseTeamFromQuery().length > 0) return [];
   try {
     let raw = window.localStorage.getItem(STORAGE_KEY);
 
