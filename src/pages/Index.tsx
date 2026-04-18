@@ -278,15 +278,31 @@ const Index = () => {
             </p>
           </div>
           {team.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Clear
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="text-muted-foreground hover:text-primary"
+                aria-label="Copy shareable team link"
+              >
+                {justCopied ? (
+                  <Check className="h-4 w-4 mr-1 text-success" />
+                ) : (
+                  <Share2 className="h-4 w-4 mr-1" />
+                )}
+                {justCopied ? "Copied" : "Share"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAll}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            </div>
           )}
         </div>
       </header>
