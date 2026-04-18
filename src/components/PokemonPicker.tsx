@@ -292,5 +292,56 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
   );
 };
 
+interface PickerCardProps {
+  p: PokemonListItem;
+  loading: boolean;
+  favorite: boolean;
+  onSelect: () => void;
+  onToggleFav: () => void;
+}
+
+const PickerCard = ({ p, loading, favorite, onSelect, onToggleFav }: PickerCardProps) => (
+  <li className="relative">
+    <button
+      onClick={onSelect}
+      disabled={loading}
+      className="w-full rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 text-left disabled:opacity-50"
+    >
+      <img
+        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
+        alt=""
+        loading="lazy"
+        className="h-10 w-10 object-contain shrink-0"
+      />
+      <div className="min-w-0 flex-1 pr-5">
+        <p className="text-[10px] text-muted-foreground font-mono">
+          #{String(p.id).padStart(4, "0")}
+        </p>
+        <p className="text-xs font-display font-semibold truncate">
+          {formatName(p.name)}
+        </p>
+      </div>
+      {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+    </button>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleFav();
+      }}
+      aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={favorite}
+      className={cn(
+        "absolute top-1 right-1 grid place-items-center h-6 w-6 rounded-full transition-colors",
+        favorite
+          ? "text-amber-400 hover:text-amber-300"
+          : "text-muted-foreground/60 hover:text-amber-400",
+      )}
+    >
+      <Star className={cn("h-3.5 w-3.5", favorite && "fill-current")} />
+    </button>
+  </li>
+);
+
 // Re-export to avoid unused import warning on TypeBadge in dev builds
 export { TypeBadge };
