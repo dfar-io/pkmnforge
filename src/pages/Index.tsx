@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Share2, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkPlus, Check, MoreHorizontal, Share2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { fetchPokemonDetail } from "@/lib/pokeapi";
@@ -20,6 +20,13 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TeamSlot } from "@/components/TeamSlot";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
