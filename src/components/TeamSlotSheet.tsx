@@ -4,7 +4,14 @@ import { TypeIcon } from "@/components/TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { NATURES, STAT_LABEL, getNatureById, type Nature } from "@/lib/natures";
 import { cn } from "@/lib/utils";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
+
+// Smogon dex slugs are the lowercase species name. PokéAPI returns names in
+// the same lowercased + hyphenated form Smogon uses for most regular forms
+// (e.g. "tapu-koko", "mr-mime"), so a direct passthrough works for the vast
+// majority of Gen 1–9 species without per-species mapping.
+const smogonUrl = (name: string) =>
+  `https://www.smogon.com/dex/sv/pokemon/${encodeURIComponent(name.toLowerCase())}/`;
 
 interface TeamSlotSheetProps {
   pokemon: PokemonDetail | null;
