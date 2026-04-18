@@ -4,11 +4,15 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
 
-// Resolve the current commit SHA at build time. Falls back to env vars
-// commonly set by CI (Vercel, Netlify, GitHub Actions) and finally "dev".
+// Resolve the current commit SHA at build time. Lovable's build environment
+// shadows the `git` binary, so prefer `__LOVABLE_REAL_GIT` when present.
+// Falls back to common CI env vars and finally "dev".
 const resolveCommitSha = (): string => {
+  const gitBin = process.env.__LOVABLE_REAL_GIT || "git";
   try {
-    return execSync("git rev-parse HEAD", { stdio: ["ignore", "pipe", "ignore"] })
+    return execSync(`${gitBin} rev-parse HEAD`, {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
       .toString()
       .trim();
   } catch {
