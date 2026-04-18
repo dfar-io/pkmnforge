@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import logo from "@/assets/logo.png";
 import {
   DndContext,
   closestCenter,
@@ -132,7 +133,13 @@ const Index = () => {
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <img
+                src={logo}
+                alt="PkmnForge logo"
+                width={28}
+                height={28}
+                className="h-7 w-7 shrink-0"
+              />
               <h1 className="font-display text-xl font-extrabold tracking-tight">
                 Pkmn<span className="text-primary">Forge</span>
               </h1>
