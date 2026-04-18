@@ -73,19 +73,35 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
                   ? `${dangers.length} type has 3+ team members weak to it.`
                   : `${dangers.length} types have 3+ team members weak to them.`}
               </p>
-              <div className="flex flex-wrap gap-1.5 mt-2">
+              <ul className="mt-2.5 space-y-1.5">
                 {dangers.map((d) => (
-                  <span
+                  <li
                     key={d.type}
-                    className={cn(
-                      "px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider",
-                      "bg-background/30 text-destructive-foreground border border-destructive-foreground/30",
-                    )}
+                    className="flex items-center gap-2 rounded-lg bg-background/25 border border-destructive-foreground/20 px-2 py-1.5"
                   >
-                    {TYPE_LABEL[d.type]} · ×{d.weakCount}
-                  </span>
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider text-primary-foreground shrink-0",
+                        `bg-type-${d.type}`,
+                      )}
+                    >
+                      {TYPE_LABEL[d.type]} ×{d.weakCount}
+                    </span>
+                    <div className="flex -space-x-1.5 flex-1 min-w-0">
+                      {d.weakMembers.map((m) => (
+                        <img
+                          key={m.id}
+                          src={m.sprite}
+                          alt={formatName(m.name)}
+                          title={`${formatName(m.name)} is weak to ${TYPE_LABEL[d.type]}`}
+                          loading="lazy"
+                          className="h-8 w-8 rounded-full bg-background/60 ring-2 ring-destructive object-contain shrink-0"
+                        />
+                      ))}
+                    </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           </div>
         </motion.div>
