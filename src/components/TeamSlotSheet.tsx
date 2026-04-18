@@ -4,7 +4,14 @@ import { TypeIcon } from "@/components/TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { NATURES, STAT_LABEL, getNatureById, type Nature } from "@/lib/natures";
 import { cn } from "@/lib/utils";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink } from "lucide-react";
+
+// Smogon dex slugs are the lowercase species name. PokéAPI returns names in
+// the same lowercased + hyphenated form Smogon uses for most regular forms
+// (e.g. "tapu-koko", "mr-mime"), so a direct passthrough works for the vast
+// majority of Gen 1–9 species without per-species mapping.
+const smogonUrl = (name: string) =>
+  `https://www.smogon.com/dex/sv/pokemon/${encodeURIComponent(name.toLowerCase())}/`;
 
 interface TeamSlotSheetProps {
   pokemon: PokemonDetail | null;
@@ -61,6 +68,25 @@ export const TeamSlotSheet = ({
                 )}
               </SheetDescription>
             </SheetHeader>
+
+            <div className="mt-4">
+              <a
+                href={smogonUrl(pokemon.name)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "flex items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5",
+                  "text-sm font-medium transition-all hover:border-primary hover:bg-card hover:shadow-glow",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4 text-primary" />
+                  View on Smogon
+                </span>
+                <span className="text-xs text-muted-foreground">smogon.com ↗</span>
+              </a>
+            </div>
 
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
