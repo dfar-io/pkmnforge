@@ -241,35 +241,49 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
               No Pokémon match
             </div>
           ) : (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {visible.map((p) => (
-                <li key={p.id}>
-                  <button
-                    onClick={() => handleSelect(p.id)}
-                    disabled={loadingPick === p.id}
-                    className="w-full rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 text-left disabled:opacity-50"
-                  >
-                    <img
-                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
-                      alt=""
-                      loading="lazy"
-                      className="h-10 w-10 object-contain shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        #{String(p.id).padStart(4, "0")}
-                      </p>
-                      <p className="text-xs font-display font-semibold truncate">
-                        {formatName(p.name)}
-                      </p>
+            <div className="space-y-3">
+              {favoriteVisible.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 px-1 pb-1.5 text-[10px] font-display font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    Favorites
+                  </div>
+                  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {favoriteVisible.map((p) => (
+                      <PickerCard
+                        key={p.id}
+                        p={p}
+                        loading={loadingPick === p.id}
+                        favorite
+                        onSelect={() => handleSelect(p.id)}
+                        onToggleFav={() => toggleFavorite(p.id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {nonFavoriteVisible.length > 0 && (
+                <div>
+                  {favoriteVisible.length > 0 && (
+                    <div className="px-1 pb-1.5 text-[10px] font-display font-semibold uppercase tracking-wider text-muted-foreground">
+                      All Pokémon
                     </div>
-                    {loadingPick === p.id && (
-                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                  )}
+                  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {nonFavoriteVisible.map((p) => (
+                      <PickerCard
+                        key={p.id}
+                        p={p}
+                        loading={loadingPick === p.id}
+                        favorite={false}
+                        onSelect={() => handleSelect(p.id)}
+                        onToggleFav={() => toggleFavorite(p.id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
           <div ref={sentinelRef} className="h-8" />
         </div>
