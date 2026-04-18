@@ -2,8 +2,7 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-
-declare const __BUILD_COMMIT__: string;
+import { BUILD_COMMIT } from "@/build-info";
 
 // Poll /version.json every PROBE_INTERVAL_MS. Vite emits this file at build
 // time with the current commit SHA — when it changes, a new deploy is live.
@@ -32,7 +31,7 @@ export const UpdateNotifier = () => {
     // Skip in dev — HMR handles updates and there's no built version.json.
     if (import.meta.env.DEV) return;
     // Skip when we don't have a real build commit to compare against.
-    if (!__BUILD_COMMIT__ || __BUILD_COMMIT__ === "dev") return;
+    if (!BUILD_COMMIT || BUILD_COMMIT === "dev") return;
 
     let cancelled = false;
     let intervalId: number | undefined;
@@ -59,7 +58,7 @@ export const UpdateNotifier = () => {
     const check = async () => {
       const deployed = await fetchDeployedCommit();
       if (cancelled || !deployed) return;
-      if (deployed !== __BUILD_COMMIT__) {
+      if (deployed !== BUILD_COMMIT) {
         promptRefresh();
         if (intervalId) window.clearInterval(intervalId);
       }
