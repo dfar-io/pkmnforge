@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
@@ -6,6 +6,7 @@ import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import type { PokemonDetail } from "@/lib/pokeapi";
+import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
 const TEAM_SIZE = 6;
 
@@ -43,6 +44,20 @@ const Index = () => {
   const filledTeam = team.filter((p): p is PokemonDetail => Boolean(p));
   const excludeIds = filledTeam.map((p) => p.id);
   const firstEmptySlot = team.findIndex((m) => !m);
+
+  // IDs of team members involved in any 3+ shared weakness.
+  const criticalMemberIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const attacker of POKEMON_TYPES) {
+      const weakOnes = filledTeam.filter(
+        (m) => classify(getMultiplier(attacker, m.types)) === "weak",
+      );
+      if (weakOnes.length >= 3) {
+        for (const m of weakOnes) ids.add(m.id);
+      }
+    }
+    return ids;
+  }, [filledTeam]);
 
   const addSuggestion = (pokemon: PokemonDetail) => {
     if (firstEmptySlot === -1) return;
@@ -95,6 +110,7 @@ const Index = () => {
                 index={i}
                 onAdd={() => openPicker(i)}
                 onRemove={() => handleRemove(i)}
+                isCritical={member ? criticalMemberIds.has(member.id) : false}
               />
             ))}
           </div>
