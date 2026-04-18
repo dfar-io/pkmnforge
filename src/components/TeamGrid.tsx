@@ -22,12 +22,14 @@ import { useMemo } from "react";
 interface TeamGridProps {
   team: PokemonDetail[];
   teamSize: number;
+  natures: Record<number, string>;
   onOpenPicker: () => void;
   onRemove: (slot: number) => void;
   onReorder: (next: PokemonDetail[]) => void;
+  onOpenDetail: (slot: number) => void;
 }
 
-export const TeamGrid = ({ team, teamSize, onOpenPicker, onRemove, onReorder }: TeamGridProps) => {
+export const TeamGrid = ({ team, teamSize, natures, onOpenPicker, onRemove, onReorder, onOpenDetail }: TeamGridProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
@@ -80,6 +82,8 @@ export const TeamGrid = ({ team, teamSize, onOpenPicker, onRemove, onReorder }: 
                   index={i}
                   onAdd={isNextEmpty ? onOpenPicker : () => {}}
                   onRemove={() => onRemove(i)}
+                  onOpenDetail={member ? () => onOpenDetail(i) : undefined}
+                  natureId={member ? natures[member.id] : undefined}
                   isCritical={member ? criticalMemberIds.has(member.id) : false}
                   disabled={!member && !isNextEmpty}
                 />
