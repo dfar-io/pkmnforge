@@ -137,10 +137,51 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
           </div>
         </div>
 
+        {/* Type filter chips */}
+        <div className="px-3 pb-2">
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+            {POKEMON_TYPES.map((t) => {
+              const active = activeType === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setActiveType(active ? null : t)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
+                    active
+                      ? "bg-primary text-primary-foreground ring-2 ring-primary/40"
+                      : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  )}
+                  aria-pressed={active}
+                  title={`Filter by ${TYPE_LABEL[t]}`}
+                >
+                  <TypeIcon type={t} className="h-4 w-4 ring-0" />
+                  <span className="hidden xs:inline">{TYPE_LABEL[t]}</span>
+                </button>
+              );
+            })}
+            {activeType && (
+              <button
+                type="button"
+                onClick={() => setActiveType(null)}
+                className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
-          {list.length === 0 ? (
+          {list.length === 0 || (activeType && typeLoading && !typeIds) ? (
             <div className="grid h-full place-items-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="grid h-full place-items-center text-muted-foreground text-sm">
+              No Pokémon match
             </div>
           ) : (
             <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
