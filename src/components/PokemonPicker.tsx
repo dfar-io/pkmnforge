@@ -34,9 +34,10 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingPick, setLoadingPick] = useState<number | null>(null);
-  const [activeType, setActiveType] = useState<PokemonType | null>(null);
-  const [typeIds, setTypeIds] = useState<Set<number> | null>(null);
+  const [activeTypes, setActiveTypes] = useState<PokemonType[]>([]);
+  const [typeIdsMap, setTypeIdsMap] = useState<Record<string, Set<number>>>({});
   const [typeLoading, setTypeLoading] = useState(false);
+  const [matchMode, setMatchMode] = useState<"any" | "all">("any");
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -48,21 +49,25 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     if (!open) {
       setQuery("");
       setVisibleCount(PAGE_SIZE);
-      setActiveType(null);
-      setTypeIds(null);
+      setActiveTypes([]);
+      setMatchMode("any");
     }
   }, [open]);
 
+  // Fetch id-sets for any active types not yet cached in local map.
   useEffect(() => {
-    if (!activeType) {
-      setTypeIds(null);
-      return;
-    }
+    const missing = activeTypes.filter((t) => !typeIdsMap[t]);
+    if (missing.length === 0) return;
     let cancelled = false;
     setTypeLoading(true);
-    fetchPokemonIdsByType(activeType)
-      .then((ids) => {
-        if (!cancelled) setTypeIds(ids);
+    Promise.all(missing.map((t) => fetchPokemonIdsByType(t).then((ids) => [t, ids] as const)))
+      .then((entries) => {
+        if (cancelled) return;
+        setTypeIdsMap((prev) => {
+          const next = { ...prev };
+          for (const [t, ids] of entries) next[t] = ids;
+          return next;
+        });
       })
       .catch(console.error)
       .finally(() => {
@@ -71,15 +76,26 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => {
       cancelled = true;
     };
-  }, [activeType]);
+  }, [activeTypes, typeIdsMap]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let base = list.filter((p) => !excludeIds.includes(p.id));
-    if (activeType && typeIds) base = base.filter((p) => typeIds.has(p.id));
+    if (activeTypes.length > 0) {
+      const sets = activeTypes.map((t) => typeIdsMap[t]).filter(Boolean) as Set<number>[];
+      if (sets.length === activeTypes.length) {
+        base = base.filter((p) =>
+          matchMode === "all" ? sets.every((s) => s.has(p.id)) : sets.some((s) => s.has(p.id)),
+        );
+      }
+    }
     if (!q) return base;
     return base.filter((p) => p.name.includes(q) || String(p.id) === q);
-  }, [list, query, excludeIds, activeType, typeIds]);
+  }, [list, query, excludeIds, activeTypes, typeIdsMap, matchMode]);
+
+  const toggleType = (t: PokemonType) => {
+    setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+  };
 
   const visible = filtered.slice(0, visibleCount);
 
