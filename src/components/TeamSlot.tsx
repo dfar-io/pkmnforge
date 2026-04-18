@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { X, Plus, GripVertical } from "lucide-react";
+import { X, Plus, GripVertical, Star } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TypeIcon } from "./TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface TeamSlotProps {
   pokemon?: PokemonDetail;
@@ -25,6 +26,8 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
   });
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = pokemon ? isFavorite(pokemon.id) : false;
 
   if (!pokemon) {
     return (
