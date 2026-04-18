@@ -8,7 +8,7 @@ import {
   getMultiplier,
   type PokemonType,
 } from "@/lib/pokemon-types";
-import type { PokemonDetail } from "@/lib/pokeapi";
+import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { cn } from "@/lib/utils";
 
 interface AnalysisProps {
