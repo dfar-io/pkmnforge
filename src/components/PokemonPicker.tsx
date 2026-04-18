@@ -245,7 +245,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
               {favoriteVisible.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 px-1 pb-1.5 text-[10px] font-display font-semibold uppercase tracking-wider text-muted-foreground">
-                    <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    <Star className="h-3 w-3 fill-favorite text-favorite" />
                     Favorites
                   </div>
                   <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -334,8 +334,8 @@ const PickerCard = ({ p, loading, favorite, onSelect, onToggleFav }: PickerCardP
       className={cn(
         "absolute top-1 right-1 grid place-items-center h-6 w-6 rounded-full transition-colors",
         favorite
-          ? "text-amber-400 hover:text-amber-300"
-          : "text-muted-foreground/60 hover:text-amber-400",
+          ? "text-favorite hover:text-favorite/80"
+          : "text-muted-foreground/60 hover:text-favorite",
       )}
     >
       <Star className={cn("h-3.5 w-3.5", favorite && "fill-current")} />
