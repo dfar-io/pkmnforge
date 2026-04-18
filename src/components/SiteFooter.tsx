@@ -1,6 +1,10 @@
 import { GitCommit, Clock } from "lucide-react";
 
 // Build-time constants injected via Vite `define` (see vite.config.ts).
+declare const __BUILD_COMMIT__: string;
+declare const __BUILD_TIME__: string;
+declare const __REPO_URL__: string;
+
 const COMMIT = __BUILD_COMMIT__;
 const BUILD_TIME = __BUILD_TIME__;
 const REPO_URL = __REPO_URL__;
