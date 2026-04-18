@@ -155,7 +155,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
 
         {/* Type filter chips */}
         <div className="px-3 pb-2 space-y-2">
-          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+          <div className="flex flex-wrap gap-1.5">
             {POKEMON_TYPES.map((t) => {
               const active = activeTypes.includes(t);
               return (
@@ -164,7 +164,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
                   type="button"
                   onClick={() => toggleType(t)}
                   className={cn(
-                    "shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
+                    "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
                     active
                       ? "bg-primary text-primary-foreground ring-2 ring-primary/40"
                       : "bg-secondary/60 text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -173,7 +173,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
                   title={`Filter by ${TYPE_LABEL[t]}`}
                 >
                   <TypeIcon type={t} className="h-4 w-4 ring-0" />
-                  <span className="hidden xs:inline">{TYPE_LABEL[t]}</span>
+                  <span>{TYPE_LABEL[t]}</span>
                 </button>
               );
             })}
