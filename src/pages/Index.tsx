@@ -113,6 +113,63 @@ const Index = () => {
     }
   }, [team]);
 
+  // One-time hydration from `?team=` query string. Runs after mount so
+  // PokemonDetail can be fetched. Strips the param once loaded so further
+  // edits don't fight the URL. Failures fall back silently.
+  useEffect(() => {
+    const ids = parseTeamFromQuery();
+    if (ids.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const details = await Promise.all(
+          ids.map((id) => fetchPokemonDetail(id).catch(() => null)),
+        );
+        if (cancelled) return;
+        const valid = details.filter((d): d is PokemonDetail => Boolean(d));
+        if (valid.length > 0) {
+          setTeam(valid.slice(0, TEAM_SIZE));
+          toast.success(`Loaded shared team (${valid.length})`);
+        }
+      } finally {
+        if (!cancelled) {
+          // Clean the URL so subsequent edits aren't shadowed by stale params.
+          const url = new URL(window.location.href);
+          url.searchParams.delete("team");
+          window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [justCopied, setJustCopied] = useState(false);
+  const handleShare = async () => {
+    if (team.length === 0) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("team", team.map((p) => p.id).join(","));
+    const link = url.toString();
+    try {
+      await navigator.clipboard.writeText(link);
+      setJustCopied(true);
+      window.setTimeout(() => setJustCopied(false), 1800);
+      toast.success("Team link copied to clipboard");
+    } catch {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "My PkmnForge team", url: link });
+          return;
+        } catch {
+          /* user dismissed */
+        }
+      }
+      toast.error("Couldn't copy link");
+    }
+  };
+
   const isFull = team.length >= TEAM_SIZE;
 
   const openPicker = () => {
