@@ -10,8 +10,10 @@ interface TypeBadgeProps {
 export const TypeBadge = ({ type, size = "md", className }: TypeBadgeProps) => (
   <span
     className={cn(
-      "inline-flex items-center justify-center rounded-full font-display font-semibold uppercase tracking-wider text-primary-foreground shadow-sm",
-      size === "sm" ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-xs",
+      "inline-flex items-center justify-center rounded-full font-display font-semibold uppercase text-primary-foreground shadow-sm whitespace-nowrap",
+      size === "sm"
+        ? "px-1.5 py-0.5 text-[9px] tracking-wide"
+        : "px-2.5 py-1 text-xs tracking-wider",
       `bg-type-${type}`,
       className,
     )}
