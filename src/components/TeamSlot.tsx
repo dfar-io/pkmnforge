@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { X, Plus, GripVertical } from "lucide-react";
+import { X, Plus, GripVertical, Star } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TypeIcon } from "./TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
+import { useFavorites } from "@/hooks/useFavorites";
 import { cn } from "@/lib/utils";
 
 interface TeamSlotProps {
@@ -23,6 +24,8 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
     id: pokemon ? `pkm-${pokemon.id}` : `empty-${index}`,
     disabled: !pokemon,
   });
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const favorite = pokemon ? isFavorite(pokemon.id) : false;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = sortable;
 
@@ -85,6 +88,21 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         aria-label={`Remove ${pokemon.name}`}
       >
         <X className="h-3.5 w-3.5" />
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(pokemon.id);
+        }}
+        className={cn(
+          "absolute top-1 right-8 z-20 grid h-6 w-6 place-items-center rounded-full bg-background/80 transition-colors",
+          favorite ? "text-favorite hover:text-favorite/80" : "text-muted-foreground hover:text-favorite",
+        )}
+        aria-label={favorite ? `Unfavorite ${pokemon.name}` : `Favorite ${pokemon.name}`}
+        aria-pressed={favorite}
+      >
+        <Star className={cn("h-3.5 w-3.5", favorite && "fill-current")} />
       </button>
 
       {/* Drag handle — covers the body of the card but sits below the remove button. */}
