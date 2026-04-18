@@ -20,11 +20,12 @@ interface TypeRow {
   weakCount: number;
   resistCount: number;
   weakMembers: PokemonDetail[];
+  idx: number;
 }
 
 export const TeamAnalysis = ({ team }: AnalysisProps) => {
   const rows = useMemo<TypeRow[]>(() => {
-    return POKEMON_TYPES.map((attacker) => {
+    return POKEMON_TYPES.map((attacker, idx) => {
       let weak = 0;
       let resist = 0;
       const weakMembers: PokemonDetail[] = [];
@@ -37,7 +38,14 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
           resist++;
         }
       }
-      return { type: attacker, weakCount: weak, resistCount: resist, weakMembers };
+      return { type: attacker, weakCount: weak, resistCount: resist, weakMembers, idx };
+    }).sort((a, b) => {
+      // Primary: most weaknesses first.
+      if (b.weakCount !== a.weakCount) return b.weakCount - a.weakCount;
+      // Secondary: least resistances first.
+      if (a.resistCount !== b.resistCount) return a.resistCount - b.resistCount;
+      // Tiebreaker: original POKEMON_TYPES order (stable default).
+      return a.idx - b.idx;
     });
   }, [team]);
 
