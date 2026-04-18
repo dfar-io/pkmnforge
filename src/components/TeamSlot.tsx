@@ -102,11 +102,11 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-lg pointer-events-none"
         loading="lazy"
       />
-      <div className="absolute bottom-0 inset-x-0 p-1.5 bg-gradient-to-t from-background/95 via-background/70 to-transparent pointer-events-none">
+      <div className="absolute bottom-0 inset-x-0 px-1 pb-1.5 pt-1.5 bg-gradient-to-t from-background/95 via-background/70 to-transparent pointer-events-none">
         <p className="truncate text-[10px] font-display font-semibold text-center mb-1">
           {formatName(pokemon.name)}
         </p>
-        <div className="flex items-center justify-center gap-1">
+        <div className="flex items-center justify-center gap-1 flex-wrap">
           {pokemon.types.map((t) => (
             <TypeBadge key={t} type={t} size="sm" />
           ))}
