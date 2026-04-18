@@ -26,13 +26,34 @@ import type { PokemonDetail } from "@/lib/pokeapi";
 import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
 const TEAM_SIZE = 6;
-const STORAGE_KEY = "teamforge.team.v1";
+const STORAGE_KEY = "pkmnforge.team.v1";
+const LEGACY_STORAGE_KEYS = ["teamforge.team.v1"] as const;
 
 // Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
+// Performs a one-time migration from legacy keys to the current STORAGE_KEY.
 const loadStoredTeam = (): PokemonDetail[] => {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    let raw = window.localStorage.getItem(STORAGE_KEY);
+
+    // One-time migration: pull from the first legacy key that has data.
+    if (!raw) {
+      for (const legacy of LEGACY_STORAGE_KEYS) {
+        const legacyRaw = window.localStorage.getItem(legacy);
+        if (legacyRaw) {
+          raw = legacyRaw;
+          window.localStorage.setItem(STORAGE_KEY, legacyRaw);
+          window.localStorage.removeItem(legacy);
+          break;
+        }
+      }
+    } else {
+      // Already migrated — clean up any lingering legacy entries.
+      for (const legacy of LEGACY_STORAGE_KEYS) {
+        window.localStorage.removeItem(legacy);
+      }
+    }
+
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
