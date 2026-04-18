@@ -94,6 +94,31 @@ const Index = () => {
     setPickerOpen(true);
   };
 
+  // Keyboard shortcut: "n" or "+" opens the picker (when not typing in a field
+  // and the team has space). The dialog itself handles Esc to close.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+      if (pickerOpen || isFull) return;
+      if (e.key === "n" || e.key === "N" || e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        setPickerOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [pickerOpen, isFull]);
+
   const handleSelect = (pokemon: PokemonDetail) => {
     setTeam((prev) => (prev.length >= TEAM_SIZE ? prev : [...prev, pokemon]));
   };

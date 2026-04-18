@@ -39,10 +39,15 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
             ? "border-border/40 opacity-50 cursor-not-allowed"
             : "border-border hover:border-primary hover:bg-card hover:shadow-glow active:scale-95",
         )}
-        aria-label={disabled ? `Slot ${index + 1} (locked)` : `Add Pokémon to slot ${index + 1}`}
+        aria-label={disabled ? `Slot ${index + 1} (locked)` : `Add Pokémon to slot ${index + 1} (shortcut: N)`}
       >
         <Plus className={cn("h-6 w-6 transition-colors", disabled ? "text-muted-foreground/40" : "text-muted-foreground group-hover:text-primary")} />
         <span className="text-[10px] font-medium text-muted-foreground">Slot {index + 1}</span>
+        {!disabled && (
+          <kbd className="mt-0.5 hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background/60 px-1 py-px text-[9px] font-mono text-muted-foreground/80 group-hover:text-primary">
+            N
+          </kbd>
+        )}
       </button>
     );
   }
