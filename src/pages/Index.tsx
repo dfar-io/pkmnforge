@@ -70,7 +70,7 @@ const Index = () => {
               Build & analyze your Pokémon squad
             </p>
           </div>
-          {filledTeam.length > 0 && (
+          {team.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -89,32 +89,38 @@ const Index = () => {
         <section>
           <h2 className="sr-only">Your Team</h2>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-            {team.map((member, i) => (
-              <TeamSlot
-                key={i}
-                pokemon={member}
-                index={i}
-                onAdd={() => openPicker(i)}
-                onRemove={() => handleRemove(i)}
-                isCritical={member ? criticalMemberIds.has(member.id) : false}
-              />
-            ))}
+            {Array.from({ length: TEAM_SIZE }).map((_, i) => {
+              const member = team[i];
+              // Only the first empty slot (right after the last filled one) is interactive.
+              const isNextEmpty = !member && i === team.length;
+              return (
+                <TeamSlot
+                  key={member ? `m-${member.id}-${i}` : `empty-${i}`}
+                  pokemon={member}
+                  index={i}
+                  onAdd={isNextEmpty ? openPicker : () => {}}
+                  onRemove={() => handleRemove(i)}
+                  isCritical={member ? criticalMemberIds.has(member.id) : false}
+                  disabled={!member && !isNextEmpty}
+                />
+              );
+            })}
           </div>
         </section>
 
         {/* Suggestion */}
         <section>
           <SuggestTeammate
-            team={filledTeam}
+            team={team}
             excludeIds={excludeIds}
             onPick={addSuggestion}
-            canAdd={firstEmptySlot !== -1}
+            canAdd={!isFull}
           />
         </section>
 
         {/* Analysis */}
         <section>
-          <TeamAnalysis team={filledTeam} />
+          <TeamAnalysis team={team} />
         </section>
       </main>
 
