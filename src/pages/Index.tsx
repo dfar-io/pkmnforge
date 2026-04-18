@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Check, Share2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { fetchPokemonDetail } from "@/lib/pokeapi";
 import {
   DndContext,
   closestCenter,
@@ -29,10 +31,34 @@ const TEAM_SIZE = 6;
 const STORAGE_KEY = "pkmnforge.team.v1";
 const LEGACY_STORAGE_KEYS = ["teamforge.team.v1"] as const;
 
+// Parse `?team=1,4,7` into a list of valid dex IDs (deduped, capped to TEAM_SIZE).
+const parseTeamFromQuery = (): number[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("team");
+    if (!raw) return [];
+    const ids: number[] = [];
+    for (const part of raw.split(",")) {
+      const n = Number(part.trim());
+      if (Number.isInteger(n) && n > 0 && n <= 1025 && !ids.includes(n)) {
+        ids.push(n);
+      }
+      if (ids.length >= TEAM_SIZE) break;
+    }
+    return ids;
+  } catch {
+    return [];
+  }
+};
+
 // Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
 // Performs a one-time migration from legacy keys to the current STORAGE_KEY.
+// If `?team=` is present in the URL, we defer to the async hydration effect
+// and start empty so the URL-shared team wins over stored team.
 const loadStoredTeam = (): PokemonDetail[] => {
   if (typeof window === "undefined") return [];
+  if (parseTeamFromQuery().length > 0) return [];
   try {
     let raw = window.localStorage.getItem(STORAGE_KEY);
 
@@ -86,6 +112,63 @@ const Index = () => {
       // Storage may be unavailable (quota / private mode) — silently ignore.
     }
   }, [team]);
+
+  // One-time hydration from `?team=` query string. Runs after mount so
+  // PokemonDetail can be fetched. Strips the param once loaded so further
+  // edits don't fight the URL. Failures fall back silently.
+  useEffect(() => {
+    const ids = parseTeamFromQuery();
+    if (ids.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const details = await Promise.all(
+          ids.map((id) => fetchPokemonDetail(id).catch(() => null)),
+        );
+        if (cancelled) return;
+        const valid = details.filter((d): d is PokemonDetail => Boolean(d));
+        if (valid.length > 0) {
+          setTeam(valid.slice(0, TEAM_SIZE));
+          toast.success(`Loaded shared team (${valid.length})`);
+        }
+      } finally {
+        if (!cancelled) {
+          // Clean the URL so subsequent edits aren't shadowed by stale params.
+          const url = new URL(window.location.href);
+          url.searchParams.delete("team");
+          window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [justCopied, setJustCopied] = useState(false);
+  const handleShare = async () => {
+    if (team.length === 0) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("team", team.map((p) => p.id).join(","));
+    const link = url.toString();
+    try {
+      await navigator.clipboard.writeText(link);
+      setJustCopied(true);
+      window.setTimeout(() => setJustCopied(false), 1800);
+      toast.success("Team link copied to clipboard");
+    } catch {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: "My PkmnForge team", url: link });
+          return;
+        } catch {
+          /* user dismissed */
+        }
+      }
+      toast.error("Couldn't copy link");
+    }
+  };
 
   const isFull = team.length >= TEAM_SIZE;
 
@@ -195,15 +278,31 @@ const Index = () => {
             </p>
           </div>
           {team.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAll}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Clear
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="text-muted-foreground hover:text-primary"
+                aria-label="Copy shareable team link"
+              >
+                {justCopied ? (
+                  <Check className="h-4 w-4 mr-1 text-success" />
+                ) : (
+                  <Share2 className="h-4 w-4 mr-1" />
+                )}
+                {justCopied ? "Copied" : "Share"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAll}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+            </div>
           )}
         </div>
       </header>
