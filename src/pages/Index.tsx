@@ -173,6 +173,26 @@ const Index = () => {
         excludeIds={excludeIds}
       />
 
+      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear your team?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all {team.length} Pokémon from your current team. Saved teams aren't affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={performClear}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear team
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <SiteFooter />
     </div>
   );
