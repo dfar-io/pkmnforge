@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import type { PokemonDetail } from "@/lib/pokeapi";
 import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
@@ -361,6 +362,8 @@ const Index = () => {
         onSelect={handleSelect}
         excludeIds={excludeIds}
       />
+
+      <SiteFooter />
     </div>
   );
 };
