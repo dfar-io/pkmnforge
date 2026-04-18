@@ -104,6 +104,27 @@ const Index = () => {
     setTeam((prev) => [...prev, pokemon]);
   };
 
+  // dnd-kit sensors: small distance to avoid hijacking taps on remove button.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setTeam((prev) => {
+      const ids = prev.map((p) => `pkm-${p.id}`);
+      const from = ids.indexOf(String(active.id));
+      const to = ids.indexOf(String(over.id));
+      if (from === -1 || to === -1) return prev;
+      return arrayMove(prev, from, to);
+    });
+  };
+
+  const sortableIds = team.map((p) => `pkm-${p.id}`);
+
   return (
     <div className="min-h-screen bg-background pb-12">
       {/* Header */}
