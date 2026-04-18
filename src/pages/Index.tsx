@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
@@ -9,11 +9,45 @@ import type { PokemonDetail } from "@/lib/pokeapi";
 import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
 const TEAM_SIZE = 6;
+const STORAGE_KEY = "teamforge.team.v1";
+
+// Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
+const loadStoredTeam = (): PokemonDetail[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    // Minimal shape validation so a corrupt entry can't crash the app.
+    return parsed
+      .filter(
+        (p): p is PokemonDetail =>
+          p &&
+          typeof p.id === "number" &&
+          typeof p.name === "string" &&
+          Array.isArray(p.types) &&
+          typeof p.sprite === "string",
+      )
+      .slice(0, TEAM_SIZE);
+  } catch {
+    return [];
+  }
+};
 
 const Index = () => {
   // Team is always compacted: filled members first, no gaps.
-  const [team, setTeam] = useState<PokemonDetail[]>([]);
+  const [team, setTeam] = useState<PokemonDetail[]>(loadStoredTeam);
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  // Persist on every change.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(team));
+    } catch {
+      // Storage may be unavailable (quota / private mode) — silently ignore.
+    }
+  }, [team]);
 
   const isFull = team.length >= TEAM_SIZE;
 
