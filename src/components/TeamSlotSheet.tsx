@@ -70,6 +70,25 @@ export const TeamSlotSheet = ({
             </SheetHeader>
 
             <div className="mt-4">
+              <a
+                href={smogonUrl(pokemon.name)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  "flex items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5",
+                  "text-sm font-medium transition-all hover:border-primary hover:bg-card hover:shadow-glow",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <ExternalLink className="h-4 w-4 text-primary" />
+                  View on Smogon
+                </span>
+                <span className="text-xs text-muted-foreground">smogon.com ↗</span>
+              </a>
+            </div>
+
+            <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground">
                   Nature
