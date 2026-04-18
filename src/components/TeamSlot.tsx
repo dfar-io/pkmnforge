@@ -100,7 +100,7 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
       <img
         src={pokemon.sprite}
         alt={pokemon.name}
-        className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-lg pointer-events-none opacity-80"
+        className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-lg pointer-events-none opacity-70"
         loading="lazy"
       />
 
