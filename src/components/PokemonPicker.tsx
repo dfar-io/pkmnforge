@@ -111,7 +111,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => io.disconnect();
   }, [filtered.length, visibleCount]);
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeType, typeIds]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode]);
 
   const handleSelect = async (id: number) => {
     setLoadingPick(id);
@@ -154,15 +154,15 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
         </div>
 
         {/* Type filter chips */}
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 space-y-2">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
             {POKEMON_TYPES.map((t) => {
-              const active = activeType === t;
+              const active = activeTypes.includes(t);
               return (
                 <button
                   key={t}
                   type="button"
-                  onClick={() => setActiveType(active ? null : t)}
+                  onClick={() => toggleType(t)}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
                     active
@@ -177,21 +177,51 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
                 </button>
               );
             })}
-            {activeType && (
+          </div>
+          {activeTypes.length > 0 && (
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="inline-flex rounded-full bg-secondary/60 p-0.5 text-[10px] font-display font-semibold uppercase tracking-wide">
+                <button
+                  type="button"
+                  onClick={() => setMatchMode("any")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full transition-colors",
+                    matchMode === "any"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-pressed={matchMode === "any"}
+                >
+                  Any
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchMode("all")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full transition-colors",
+                    matchMode === "all"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-pressed={matchMode === "all"}
+                >
+                  All
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={() => setActiveType(null)}
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
+                onClick={() => setActiveTypes([])}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
               >
                 <X className="h-3 w-3" />
-                Clear
+                Clear ({activeTypes.length})
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
-          {list.length === 0 || (activeType && typeLoading && !typeIds) ? (
+          {list.length === 0 || (activeTypes.length > 0 && typeLoading && filtered.length === 0) ? (
             <div className="grid h-full place-items-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
