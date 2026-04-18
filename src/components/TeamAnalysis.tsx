@@ -19,6 +19,7 @@ interface TypeRow {
   type: PokemonType;
   weakCount: number;
   resistCount: number;
+  weakMembers: PokemonDetail[];
 }
 
 export const TeamAnalysis = ({ team }: AnalysisProps) => {
@@ -26,12 +27,17 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
     return POKEMON_TYPES.map((attacker) => {
       let weak = 0;
       let resist = 0;
+      const weakMembers: PokemonDetail[] = [];
       for (const member of team) {
         const eff = classify(getMultiplier(attacker, member.types));
-        if (eff === "weak") weak++;
-        else if (eff === "resist" || eff === "immune") resist++;
+        if (eff === "weak") {
+          weak++;
+          weakMembers.push(member);
+        } else if (eff === "resist" || eff === "immune") {
+          resist++;
+        }
       }
-      return { type: attacker, weakCount: weak, resistCount: resist };
+      return { type: attacker, weakCount: weak, resistCount: resist, weakMembers };
     });
   }, [team]);
 
