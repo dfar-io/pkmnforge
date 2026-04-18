@@ -11,45 +11,35 @@ import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 const TEAM_SIZE = 6;
 
 const Index = () => {
-  const [team, setTeam] = useState<(PokemonDetail | undefined)[]>(
-    Array(TEAM_SIZE).fill(undefined),
-  );
+  // Team is always compacted: filled members first, no gaps.
+  const [team, setTeam] = useState<PokemonDetail[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [activeSlot, setActiveSlot] = useState<number | null>(null);
 
-  const openPicker = (slot: number) => {
-    setActiveSlot(slot);
+  const isFull = team.length >= TEAM_SIZE;
+
+  const openPicker = () => {
+    if (isFull) return;
     setPickerOpen(true);
   };
 
   const handleSelect = (pokemon: PokemonDetail) => {
-    if (activeSlot === null) return;
-    setTeam((prev) => {
-      const next = [...prev];
-      next[activeSlot] = pokemon;
-      return next;
-    });
+    setTeam((prev) => (prev.length >= TEAM_SIZE ? prev : [...prev, pokemon]));
   };
 
+  // Remove and compact (shift left).
   const handleRemove = (slot: number) => {
-    setTeam((prev) => {
-      const next = [...prev];
-      next[slot] = undefined;
-      return next;
-    });
+    setTeam((prev) => prev.filter((_, i) => i !== slot));
   };
 
-  const clearAll = () => setTeam(Array(TEAM_SIZE).fill(undefined));
+  const clearAll = () => setTeam([]);
 
-  const filledTeam = team.filter((p): p is PokemonDetail => Boolean(p));
-  const excludeIds = filledTeam.map((p) => p.id);
-  const firstEmptySlot = team.findIndex((m) => !m);
+  const excludeIds = team.map((p) => p.id);
 
   // IDs of team members involved in any 3+ shared weakness.
   const criticalMemberIds = useMemo(() => {
     const ids = new Set<number>();
     for (const attacker of POKEMON_TYPES) {
-      const weakOnes = filledTeam.filter(
+      const weakOnes = team.filter(
         (m) => classify(getMultiplier(attacker, m.types)) === "weak",
       );
       if (weakOnes.length >= 3) {
@@ -57,15 +47,11 @@ const Index = () => {
       }
     }
     return ids;
-  }, [filledTeam]);
+  }, [team]);
 
   const addSuggestion = (pokemon: PokemonDetail) => {
-    if (firstEmptySlot === -1) return;
-    setTeam((prev) => {
-      const next = [...prev];
-      next[firstEmptySlot] = pokemon;
-      return next;
-    });
+    if (isFull) return;
+    setTeam((prev) => [...prev, pokemon]);
   };
 
   return (
