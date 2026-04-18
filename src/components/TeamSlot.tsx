@@ -71,22 +71,23 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
-      {/* Name banner pinned to top — solid backdrop so it stays legible over any sprite. */}
-      <div className="absolute top-0 inset-x-0 z-10 px-6 pt-1 pb-1 bg-gradient-to-b from-background via-background/85 to-transparent pointer-events-none">
-        <p className="truncate text-[11px] font-display font-bold text-center text-foreground [text-shadow:0_1px_2px_hsl(var(--background))]">
-          {formatName(pokemon.name)}
-        </p>
-      </div>
-
+      {isCritical && (
+        <span
+          className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-display font-bold uppercase tracking-wider pointer-events-none"
+          title="Part of a critical shared weakness"
+        >
+          Risk
+        </span>
+      )}
       <button
         onClick={onRemove}
-        className="absolute top-0.5 right-0.5 z-30 grid h-5 w-5 place-items-center rounded-full bg-background/85 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
+        className="absolute top-1 right-1 z-20 grid h-6 w-6 place-items-center rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
         aria-label={`Remove ${pokemon.name}`}
       >
-        <X className="h-3 w-3" />
+        <X className="h-3.5 w-3.5" />
       </button>
 
-      {/* Drag handle — covers the body of the card but sits below interactive overlays. */}
+      {/* Drag handle — covers the body of the card but sits below the remove button. */}
       <button
         type="button"
         {...attributes}
@@ -95,27 +96,22 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         aria-label={`Reorder ${pokemon.name}`}
       />
 
+      {/* Sprite is slightly dimmed so the centered name stays legible on top. */}
       <img
         src={pokemon.sprite}
         alt={pokemon.name}
-        className="absolute inset-0 h-full w-full object-contain pt-5 pb-7 px-1 drop-shadow-lg pointer-events-none"
+        className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-lg pointer-events-none opacity-80"
         loading="lazy"
       />
 
-      {/* Bottom row: type icons + (optional) Risk badge. */}
-      <div className="absolute bottom-0 inset-x-0 px-1 pb-1 pt-2 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none">
+      <div className="absolute bottom-0 inset-x-0 px-1 pb-1.5 pt-3 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none">
+        <p className="truncate text-[11px] font-display font-bold text-center mb-1 text-foreground [text-shadow:0_1px_2px_hsl(var(--background))]">
+          {formatName(pokemon.name)}
+        </p>
         <div className="flex items-center justify-center gap-1">
           {pokemon.types.map((t) => (
             <TypeIcon key={t} type={t} />
           ))}
-          {isCritical && (
-            <span
-              className="ml-0.5 px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-display font-bold uppercase tracking-wider"
-              title="Part of a critical shared weakness"
-            >
-              Risk
-            </span>
-          )}
         </div>
       </div>
 
