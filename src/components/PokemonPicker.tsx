@@ -34,9 +34,10 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [loadingPick, setLoadingPick] = useState<number | null>(null);
-  const [activeType, setActiveType] = useState<PokemonType | null>(null);
-  const [typeIds, setTypeIds] = useState<Set<number> | null>(null);
+  const [activeTypes, setActiveTypes] = useState<PokemonType[]>([]);
+  const [typeIdsMap, setTypeIdsMap] = useState<Record<string, Set<number>>>({});
   const [typeLoading, setTypeLoading] = useState(false);
+  const [matchMode, setMatchMode] = useState<"any" | "all">("any");
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -48,21 +49,25 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     if (!open) {
       setQuery("");
       setVisibleCount(PAGE_SIZE);
-      setActiveType(null);
-      setTypeIds(null);
+      setActiveTypes([]);
+      setMatchMode("any");
     }
   }, [open]);
 
+  // Fetch id-sets for any active types not yet cached in local map.
   useEffect(() => {
-    if (!activeType) {
-      setTypeIds(null);
-      return;
-    }
+    const missing = activeTypes.filter((t) => !typeIdsMap[t]);
+    if (missing.length === 0) return;
     let cancelled = false;
     setTypeLoading(true);
-    fetchPokemonIdsByType(activeType)
-      .then((ids) => {
-        if (!cancelled) setTypeIds(ids);
+    Promise.all(missing.map((t) => fetchPokemonIdsByType(t).then((ids) => [t, ids] as const)))
+      .then((entries) => {
+        if (cancelled) return;
+        setTypeIdsMap((prev) => {
+          const next = { ...prev };
+          for (const [t, ids] of entries) next[t] = ids;
+          return next;
+        });
       })
       .catch(console.error)
       .finally(() => {
@@ -71,15 +76,26 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => {
       cancelled = true;
     };
-  }, [activeType]);
+  }, [activeTypes, typeIdsMap]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let base = list.filter((p) => !excludeIds.includes(p.id));
-    if (activeType && typeIds) base = base.filter((p) => typeIds.has(p.id));
+    if (activeTypes.length > 0) {
+      const sets = activeTypes.map((t) => typeIdsMap[t]).filter(Boolean) as Set<number>[];
+      if (sets.length === activeTypes.length) {
+        base = base.filter((p) =>
+          matchMode === "all" ? sets.every((s) => s.has(p.id)) : sets.some((s) => s.has(p.id)),
+        );
+      }
+    }
     if (!q) return base;
     return base.filter((p) => p.name.includes(q) || String(p.id) === q);
-  }, [list, query, excludeIds, activeType, typeIds]);
+  }, [list, query, excludeIds, activeTypes, typeIdsMap, matchMode]);
+
+  const toggleType = (t: PokemonType) => {
+    setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
+  };
 
   const visible = filtered.slice(0, visibleCount);
 
@@ -95,7 +111,7 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     return () => io.disconnect();
   }, [filtered.length, visibleCount]);
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeType, typeIds]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode]);
 
   const handleSelect = async (id: number) => {
     setLoadingPick(id);
@@ -138,15 +154,15 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
         </div>
 
         {/* Type filter chips */}
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-2 space-y-2">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
             {POKEMON_TYPES.map((t) => {
-              const active = activeType === t;
+              const active = activeTypes.includes(t);
               return (
                 <button
                   key={t}
                   type="button"
-                  onClick={() => setActiveType(active ? null : t)}
+                  onClick={() => toggleType(t)}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide transition-all",
                     active
@@ -161,21 +177,51 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
                 </button>
               );
             })}
-            {activeType && (
+          </div>
+          {activeTypes.length > 0 && (
+            <div className="flex items-center justify-between gap-2 px-1">
+              <div className="inline-flex rounded-full bg-secondary/60 p-0.5 text-[10px] font-display font-semibold uppercase tracking-wide">
+                <button
+                  type="button"
+                  onClick={() => setMatchMode("any")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full transition-colors",
+                    matchMode === "any"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-pressed={matchMode === "any"}
+                >
+                  Any
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchMode("all")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-full transition-colors",
+                    matchMode === "all"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  aria-pressed={matchMode === "all"}
+                >
+                  All
+                </button>
+              </div>
               <button
                 type="button"
-                onClick={() => setActiveType(null)}
-                className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
+                onClick={() => setActiveTypes([])}
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-display font-semibold uppercase tracking-wide bg-secondary/60 text-muted-foreground hover:text-destructive"
               >
                 <X className="h-3 w-3" />
-                Clear
+                Clear ({activeTypes.length})
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-2 pb-4 scrollbar-hide">
-          {list.length === 0 || (activeType && typeLoading && !typeIds) ? (
+          {list.length === 0 || (activeTypes.length > 0 && typeLoading && filtered.length === 0) ? (
             <div className="grid h-full place-items-center text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
