@@ -1,31 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { fetchPokemonDetail } from "@/lib/pokeapi";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  TouchSensor,
-  KeyboardSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
-import { TeamSlot } from "@/components/TeamSlot";
+import { TeamGrid } from "@/components/TeamGrid";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { HeaderActions } from "@/components/HeaderActions";
 import type { PokemonDetail } from "@/lib/pokeapi";
-import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
 const TEAM_SIZE = 6;
 const STORAGE_KEY = "pkmnforge.team.v1";
@@ -52,17 +35,12 @@ const parseTeamFromQuery = (): number[] => {
   }
 };
 
-// Lazy initializer — read once on mount; safe-guarded for SSR / private mode.
-// Performs a one-time migration from legacy keys to the current STORAGE_KEY.
-// If `?team=` is present in the URL, we defer to the async hydration effect
-// and start empty so the URL-shared team wins over stored team.
 const loadStoredTeam = (): PokemonDetail[] => {
   if (typeof window === "undefined") return [];
   if (parseTeamFromQuery().length > 0) return [];
   try {
     let raw = window.localStorage.getItem(STORAGE_KEY);
 
-    // One-time migration: pull from the first legacy key that has data.
     if (!raw) {
       for (const legacy of LEGACY_STORAGE_KEYS) {
         const legacyRaw = window.localStorage.getItem(legacy);
@@ -74,7 +52,6 @@ const loadStoredTeam = (): PokemonDetail[] => {
         }
       }
     } else {
-      // Already migrated — clean up any lingering legacy entries.
       for (const legacy of LEGACY_STORAGE_KEYS) {
         window.localStorage.removeItem(legacy);
       }
@@ -83,7 +60,6 @@ const loadStoredTeam = (): PokemonDetail[] => {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Minimal shape validation so a corrupt entry can't crash the app.
     return parsed
       .filter(
         (p): p is PokemonDetail =>
@@ -100,22 +76,17 @@ const loadStoredTeam = (): PokemonDetail[] => {
 };
 
 const Index = () => {
-  // Team is always compacted: filled members first, no gaps.
   const [team, setTeam] = useState<PokemonDetail[]>(loadStoredTeam);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // Persist on every change.
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(team));
     } catch {
-      // Storage may be unavailable (quota / private mode) — silently ignore.
+      /* ignore */
     }
   }, [team]);
 
-  // One-time hydration from `?team=` query string. Runs after mount so
-  // PokemonDetail can be fetched. Strips the param once loaded so further
-  // edits don't fight the URL. Failures fall back silently.
   useEffect(() => {
     const ids = parseTeamFromQuery();
     if (ids.length === 0) return;
@@ -133,7 +104,6 @@ const Index = () => {
         }
       } finally {
         if (!cancelled) {
-          // Clean the URL so subsequent edits aren't shadowed by stale params.
           const url = new URL(window.location.href);
           url.searchParams.delete("team");
           window.history.replaceState({}, "", url.pathname + url.search + url.hash);
@@ -177,8 +147,6 @@ const Index = () => {
     setPickerOpen(true);
   };
 
-  // Keyboard shortcut: "n" or "+" opens the picker (when not typing in a field
-  // and the team has space). The dialog itself handles Esc to close.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -206,7 +174,6 @@ const Index = () => {
     setTeam((prev) => (prev.length >= TEAM_SIZE ? prev : [...prev, pokemon]));
   };
 
-  // Remove and compact (shift left).
   const handleRemove = (slot: number) => {
     setTeam((prev) => prev.filter((_, i) => i !== slot));
   };
@@ -215,49 +182,13 @@ const Index = () => {
 
   const excludeIds = team.map((p) => p.id);
 
-  // IDs of team members involved in any 3+ shared weakness.
-  const criticalMemberIds = useMemo(() => {
-    const ids = new Set<number>();
-    for (const attacker of POKEMON_TYPES) {
-      const weakOnes = team.filter(
-        (m) => classify(getMultiplier(attacker, m.types)) === "weak",
-      );
-      if (weakOnes.length >= 3) {
-        for (const m of weakOnes) ids.add(m.id);
-      }
-    }
-    return ids;
-  }, [team]);
-
   const addSuggestion = (pokemon: PokemonDetail) => {
     if (isFull) return;
     setTeam((prev) => [...prev, pokemon]);
   };
 
-  // dnd-kit sensors: small distance to avoid hijacking taps on remove button.
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    setTeam((prev) => {
-      const ids = prev.map((p) => `pkm-${p.id}`);
-      const from = ids.indexOf(String(active.id));
-      const to = ids.indexOf(String(over.id));
-      if (from === -1 || to === -1) return prev;
-      return arrayMove(prev, from, to);
-    });
-  };
-
-  const sortableIds = team.map((p) => `pkm-${p.id}`);
-
   return (
     <div className="min-h-screen bg-background pb-12">
-      {/* Header */}
       <header className="px-4 pt-6 pb-4 sticky top-0 z-20 bg-background/85 backdrop-blur-md border-b border-border/60">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
@@ -288,38 +219,14 @@ const Index = () => {
       </header>
 
       <main className="max-w-2xl mx-auto px-4 pt-5 space-y-6">
-        {/* Team grid */}
-        <section>
-          <h2 className="sr-only">Your Team</h2>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-                {Array.from({ length: TEAM_SIZE }).map((_, i) => {
-                  const member = team[i];
-                  // Only the first empty slot (right after the last filled one) is interactive.
-                  const isNextEmpty = !member && i === team.length;
-                  return (
-                    <TeamSlot
-                      key={member ? `pkm-${member.id}` : `empty-${i}`}
-                      pokemon={member}
-                      index={i}
-                      onAdd={isNextEmpty ? openPicker : () => {}}
-                      onRemove={() => handleRemove(i)}
-                      isCritical={member ? criticalMemberIds.has(member.id) : false}
-                      disabled={!member && !isNextEmpty}
-                    />
-                  );
-                })}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </section>
+        <TeamGrid
+          team={team}
+          teamSize={TEAM_SIZE}
+          onOpenPicker={openPicker}
+          onRemove={handleRemove}
+          onReorder={setTeam}
+        />
 
-        {/* Suggestion */}
         <section>
           <SuggestTeammate
             team={team}
@@ -329,7 +236,6 @@ const Index = () => {
           />
         </section>
 
-        {/* Analysis */}
         <section>
           <TeamAnalysis team={team} />
         </section>
