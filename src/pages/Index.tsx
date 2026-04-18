@@ -7,6 +7,7 @@ import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { HeaderActions } from "@/components/HeaderActions";
+import { TeamSlotSheet } from "@/components/TeamSlotSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,21 +19,33 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTeam } from "@/hooks/useTeam";
+import { getNatureById } from "@/lib/natures";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 const TEAM_SIZE = 6;
 const CONFIRM_CLEAR_THRESHOLD = 4;
 
 const Index = () => {
-  const [team, setTeam] = useTeam(TEAM_SIZE);
+  const { team, setTeam, natures, setNature } = useTeam(TEAM_SIZE);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [detailSlot, setDetailSlot] = useState<number | null>(null);
 
   const handleShare = async () => {
     if (team.length === 0) return;
     const url = new URL(window.location.href);
     url.searchParams.set("team", team.map((p) => p.id).join(","));
+    // Include natures (compact 2-char codes) so shared links carry per-slot
+    // nature picks. Drop the param entirely if none are set to keep URLs short.
+    const naturePairs = team
+      .map((p) => {
+        const n = getNatureById(natures[p.id]);
+        return n ? `${p.id}:${n.code}` : null;
+      })
+      .filter((v): v is string => v !== null);
+    if (naturePairs.length > 0) url.searchParams.set("natures", naturePairs.join(","));
+    else url.searchParams.delete("natures");
     const link = url.toString();
     try {
       await navigator.clipboard.writeText(link);
