@@ -7,15 +7,27 @@ import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { HeaderActions } from "@/components/HeaderActions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTeam } from "@/hooks/useTeam";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 const TEAM_SIZE = 6;
+const CONFIRM_CLEAR_THRESHOLD = 4;
 
 const Index = () => {
   const [team, setTeam] = useTeam(TEAM_SIZE);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   const handleShare = async () => {
     if (team.length === 0) return;
