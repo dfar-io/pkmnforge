@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
@@ -6,6 +6,7 @@ import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import type { PokemonDetail } from "@/lib/pokeapi";
+import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 
 const TEAM_SIZE = 6;
 
