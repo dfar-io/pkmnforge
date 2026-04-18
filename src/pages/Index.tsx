@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
+import { SuggestTeammate } from "@/components/SuggestTeammate";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 const TEAM_SIZE = 6;
@@ -41,6 +42,16 @@ const Index = () => {
 
   const filledTeam = team.filter((p): p is PokemonDetail => Boolean(p));
   const excludeIds = filledTeam.map((p) => p.id);
+  const firstEmptySlot = team.findIndex((m) => !m);
+
+  const addSuggestion = (pokemon: PokemonDetail) => {
+    if (firstEmptySlot === -1) return;
+    setTeam((prev) => {
+      const next = [...prev];
+      next[firstEmptySlot] = pokemon;
+      return next;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -87,6 +98,16 @@ const Index = () => {
               />
             ))}
           </div>
+        </section>
+
+        {/* Suggestion */}
+        <section>
+          <SuggestTeammate
+            team={filledTeam}
+            excludeIds={excludeIds}
+            onPick={addSuggestion}
+            canAdd={firstEmptySlot !== -1}
+          />
         </section>
 
         {/* Analysis */}
