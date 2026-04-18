@@ -159,24 +159,32 @@ const Index = () => {
         {/* Team grid */}
         <section>
           <h2 className="sr-only">Your Team</h2>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-            {Array.from({ length: TEAM_SIZE }).map((_, i) => {
-              const member = team[i];
-              // Only the first empty slot (right after the last filled one) is interactive.
-              const isNextEmpty = !member && i === team.length;
-              return (
-                <TeamSlot
-                  key={member ? `m-${member.id}-${i}` : `empty-${i}`}
-                  pokemon={member}
-                  index={i}
-                  onAdd={isNextEmpty ? openPicker : () => {}}
-                  onRemove={() => handleRemove(i)}
-                  isCritical={member ? criticalMemberIds.has(member.id) : false}
-                  disabled={!member && !isNextEmpty}
-                />
-              );
-            })}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                {Array.from({ length: TEAM_SIZE }).map((_, i) => {
+                  const member = team[i];
+                  // Only the first empty slot (right after the last filled one) is interactive.
+                  const isNextEmpty = !member && i === team.length;
+                  return (
+                    <TeamSlot
+                      key={member ? `pkm-${member.id}` : `empty-${i}`}
+                      pokemon={member}
+                      index={i}
+                      onAdd={isNextEmpty ? openPicker : () => {}}
+                      onRemove={() => handleRemove(i)}
+                      isCritical={member ? criticalMemberIds.has(member.id) : false}
+                      disabled={!member && !isNextEmpty}
+                    />
+                  );
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
         </section>
 
         {/* Suggestion */}
