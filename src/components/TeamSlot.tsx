@@ -1,22 +1,25 @@
 import { motion } from "framer-motion";
-import { X, Plus, GripVertical, Star } from "lucide-react";
+import { X, Plus, GripVertical, Star, Sparkles } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TypeIcon } from "./TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { useFavorites } from "@/hooks/useFavorites";
+import { getNatureById } from "@/lib/natures";
 import { cn } from "@/lib/utils";
 
 interface TeamSlotProps {
   pokemon?: PokemonDetail;
   onAdd: () => void;
   onRemove: () => void;
+  onOpenDetail?: () => void;
+  natureId?: string;
   index: number;
   isCritical?: boolean;
   disabled?: boolean;
 }
 
-export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled }: TeamSlotProps) => {
+export const TeamSlot = ({ pokemon, onAdd, onRemove, onOpenDetail, natureId, index, isCritical, disabled }: TeamSlotProps) => {
   // Hooks must run unconditionally — call useSortable even for empty slots.
   // Empty slots use a stable, non-overlapping id and disabled=true so they
   // never participate in drag/sort behavior.
@@ -105,13 +108,16 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         <Star className={cn("h-3.5 w-3.5", favorite && "fill-current")} />
       </button>
 
-      {/* Drag handle — covers the body of the card but sits below the remove button. */}
+      {/* Drag handle / detail trigger — covers the body of the card but sits below
+          the remove and favorite buttons. A click (no drag) opens the detail sheet;
+          press-and-drag triggers reorder via dnd-kit's activation distance. */}
       <button
         type="button"
         {...attributes}
         {...listeners}
+        onClick={onOpenDetail}
         className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
-        aria-label={`Reorder ${pokemon.name}`}
+        aria-label={`Open details for ${pokemon.name}`}
       />
 
       {/* Sprite is slightly dimmed so the centered name stays legible on top. */}
@@ -131,6 +137,14 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
             <TypeIcon key={t} type={t} />
           ))}
         </div>
+        {natureId && getNatureById(natureId) && (
+          <div className="mt-1 flex justify-center">
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-display font-bold uppercase tracking-wider text-primary">
+              <Sparkles className="h-2 w-2" />
+              {getNatureById(natureId)!.name}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Subtle grip hint at bottom-right corner */}
