@@ -10,21 +10,25 @@ interface TeamSlotProps {
   onRemove: () => void;
   index: number;
   isCritical?: boolean;
+  disabled?: boolean;
 }
 
-export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical }: TeamSlotProps) => {
+export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled }: TeamSlotProps) => {
   if (!pokemon) {
     return (
       <button
         onClick={onAdd}
+        disabled={disabled}
         className={cn(
-          "group relative aspect-square rounded-2xl border-2 border-dashed border-border bg-card/40",
+          "group relative aspect-square rounded-2xl border-2 border-dashed bg-card/40",
           "flex flex-col items-center justify-center gap-1 transition-all",
-          "hover:border-primary hover:bg-card hover:shadow-glow active:scale-95",
+          disabled
+            ? "border-border/40 opacity-50 cursor-not-allowed"
+            : "border-border hover:border-primary hover:bg-card hover:shadow-glow active:scale-95",
         )}
-        aria-label={`Add Pokémon to slot ${index + 1}`}
+        aria-label={disabled ? `Slot ${index + 1} (locked)` : `Add Pokémon to slot ${index + 1}`}
       >
-        <Plus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+        <Plus className={cn("h-6 w-6 transition-colors", disabled ? "text-muted-foreground/40" : "text-muted-foreground group-hover:text-primary")} />
         <span className="text-[10px] font-medium text-muted-foreground">Slot {index + 1}</span>
       </button>
     );

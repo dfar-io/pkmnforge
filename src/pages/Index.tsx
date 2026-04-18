@@ -11,45 +11,35 @@ import { POKEMON_TYPES, classify, getMultiplier } from "@/lib/pokemon-types";
 const TEAM_SIZE = 6;
 
 const Index = () => {
-  const [team, setTeam] = useState<(PokemonDetail | undefined)[]>(
-    Array(TEAM_SIZE).fill(undefined),
-  );
+  // Team is always compacted: filled members first, no gaps.
+  const [team, setTeam] = useState<PokemonDetail[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [activeSlot, setActiveSlot] = useState<number | null>(null);
 
-  const openPicker = (slot: number) => {
-    setActiveSlot(slot);
+  const isFull = team.length >= TEAM_SIZE;
+
+  const openPicker = () => {
+    if (isFull) return;
     setPickerOpen(true);
   };
 
   const handleSelect = (pokemon: PokemonDetail) => {
-    if (activeSlot === null) return;
-    setTeam((prev) => {
-      const next = [...prev];
-      next[activeSlot] = pokemon;
-      return next;
-    });
+    setTeam((prev) => (prev.length >= TEAM_SIZE ? prev : [...prev, pokemon]));
   };
 
+  // Remove and compact (shift left).
   const handleRemove = (slot: number) => {
-    setTeam((prev) => {
-      const next = [...prev];
-      next[slot] = undefined;
-      return next;
-    });
+    setTeam((prev) => prev.filter((_, i) => i !== slot));
   };
 
-  const clearAll = () => setTeam(Array(TEAM_SIZE).fill(undefined));
+  const clearAll = () => setTeam([]);
 
-  const filledTeam = team.filter((p): p is PokemonDetail => Boolean(p));
-  const excludeIds = filledTeam.map((p) => p.id);
-  const firstEmptySlot = team.findIndex((m) => !m);
+  const excludeIds = team.map((p) => p.id);
 
   // IDs of team members involved in any 3+ shared weakness.
   const criticalMemberIds = useMemo(() => {
     const ids = new Set<number>();
     for (const attacker of POKEMON_TYPES) {
-      const weakOnes = filledTeam.filter(
+      const weakOnes = team.filter(
         (m) => classify(getMultiplier(attacker, m.types)) === "weak",
       );
       if (weakOnes.length >= 3) {
@@ -57,15 +47,11 @@ const Index = () => {
       }
     }
     return ids;
-  }, [filledTeam]);
+  }, [team]);
 
   const addSuggestion = (pokemon: PokemonDetail) => {
-    if (firstEmptySlot === -1) return;
-    setTeam((prev) => {
-      const next = [...prev];
-      next[firstEmptySlot] = pokemon;
-      return next;
-    });
+    if (isFull) return;
+    setTeam((prev) => [...prev, pokemon]);
   };
 
   return (
@@ -84,7 +70,7 @@ const Index = () => {
               Build & analyze your Pokémon squad
             </p>
           </div>
-          {filledTeam.length > 0 && (
+          {team.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -103,32 +89,38 @@ const Index = () => {
         <section>
           <h2 className="sr-only">Your Team</h2>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-            {team.map((member, i) => (
-              <TeamSlot
-                key={i}
-                pokemon={member}
-                index={i}
-                onAdd={() => openPicker(i)}
-                onRemove={() => handleRemove(i)}
-                isCritical={member ? criticalMemberIds.has(member.id) : false}
-              />
-            ))}
+            {Array.from({ length: TEAM_SIZE }).map((_, i) => {
+              const member = team[i];
+              // Only the first empty slot (right after the last filled one) is interactive.
+              const isNextEmpty = !member && i === team.length;
+              return (
+                <TeamSlot
+                  key={member ? `m-${member.id}-${i}` : `empty-${i}`}
+                  pokemon={member}
+                  index={i}
+                  onAdd={isNextEmpty ? openPicker : () => {}}
+                  onRemove={() => handleRemove(i)}
+                  isCritical={member ? criticalMemberIds.has(member.id) : false}
+                  disabled={!member && !isNextEmpty}
+                />
+              );
+            })}
           </div>
         </section>
 
         {/* Suggestion */}
         <section>
           <SuggestTeammate
-            team={filledTeam}
+            team={team}
             excludeIds={excludeIds}
             onPick={addSuggestion}
-            canAdd={firstEmptySlot !== -1}
+            canAdd={!isFull}
           />
         </section>
 
         {/* Analysis */}
         <section>
-          <TeamAnalysis team={filledTeam} />
+          <TeamAnalysis team={team} />
         </section>
       </main>
 
