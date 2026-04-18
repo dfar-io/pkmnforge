@@ -45,6 +45,20 @@ const Index = () => {
   const excludeIds = filledTeam.map((p) => p.id);
   const firstEmptySlot = team.findIndex((m) => !m);
 
+  // IDs of team members involved in any 3+ shared weakness.
+  const criticalMemberIds = useMemo(() => {
+    const ids = new Set<number>();
+    for (const attacker of POKEMON_TYPES) {
+      const weakOnes = filledTeam.filter(
+        (m) => classify(getMultiplier(attacker, m.types)) === "weak",
+      );
+      if (weakOnes.length >= 3) {
+        for (const m of weakOnes) ids.add(m.id);
+      }
+    }
+    return ids;
+  }, [filledTeam]);
+
   const addSuggestion = (pokemon: PokemonDetail) => {
     if (firstEmptySlot === -1) return;
     setTeam((prev) => {
