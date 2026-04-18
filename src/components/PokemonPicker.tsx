@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
 import { TypeIcon } from "./TypeBadge";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
 import { TypeBadge } from "./TypeBadge";
 
 interface PokemonPickerProps {
@@ -97,7 +98,17 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   };
 
+  const { isFavorite, toggleFavorite } = useFavorites();
+
   const visible = filtered.slice(0, visibleCount);
+  const favoriteVisible = useMemo(
+    () => visible.filter((p) => isFavorite(p.id)),
+    [visible, isFavorite],
+  );
+  const nonFavoriteVisible = useMemo(
+    () => visible.filter((p) => !isFavorite(p.id)),
+    [visible, isFavorite],
+  );
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -230,35 +241,49 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
               No Pokémon match
             </div>
           ) : (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {visible.map((p) => (
-                <li key={p.id}>
-                  <button
-                    onClick={() => handleSelect(p.id)}
-                    disabled={loadingPick === p.id}
-                    className="w-full rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 text-left disabled:opacity-50"
-                  >
-                    <img
-                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
-                      alt=""
-                      loading="lazy"
-                      className="h-10 w-10 object-contain shrink-0"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        #{String(p.id).padStart(4, "0")}
-                      </p>
-                      <p className="text-xs font-display font-semibold truncate">
-                        {formatName(p.name)}
-                      </p>
+            <div className="space-y-3">
+              {favoriteVisible.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1.5 px-1 pb-1.5 text-[10px] font-display font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Star className="h-3 w-3 fill-favorite text-favorite" />
+                    Favorites
+                  </div>
+                  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {favoriteVisible.map((p) => (
+                      <PickerCard
+                        key={p.id}
+                        p={p}
+                        loading={loadingPick === p.id}
+                        favorite
+                        onSelect={() => handleSelect(p.id)}
+                        onToggleFav={() => toggleFavorite(p.id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {nonFavoriteVisible.length > 0 && (
+                <div>
+                  {favoriteVisible.length > 0 && (
+                    <div className="px-1 pb-1.5 text-[10px] font-display font-semibold uppercase tracking-wider text-muted-foreground">
+                      All Pokémon
                     </div>
-                    {loadingPick === p.id && (
-                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
+                  )}
+                  <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {nonFavoriteVisible.map((p) => (
+                      <PickerCard
+                        key={p.id}
+                        p={p}
+                        loading={loadingPick === p.id}
+                        favorite={false}
+                        onSelect={() => handleSelect(p.id)}
+                        onToggleFav={() => toggleFavorite(p.id)}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
           <div ref={sentinelRef} className="h-8" />
         </div>
@@ -266,6 +291,57 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     </Dialog>
   );
 };
+
+interface PickerCardProps {
+  p: PokemonListItem;
+  loading: boolean;
+  favorite: boolean;
+  onSelect: () => void;
+  onToggleFav: () => void;
+}
+
+const PickerCard = ({ p, loading, favorite, onSelect, onToggleFav }: PickerCardProps) => (
+  <li className="relative">
+    <button
+      onClick={onSelect}
+      disabled={loading}
+      className="w-full rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.02] active:scale-95 flex items-center gap-2 text-left disabled:opacity-50"
+    >
+      <img
+        src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
+        alt=""
+        loading="lazy"
+        className="h-10 w-10 object-contain shrink-0"
+      />
+      <div className="min-w-0 flex-1 pr-5">
+        <p className="text-[10px] text-muted-foreground font-mono">
+          #{String(p.id).padStart(4, "0")}
+        </p>
+        <p className="text-xs font-display font-semibold truncate">
+          {formatName(p.name)}
+        </p>
+      </div>
+      {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+    </button>
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggleFav();
+      }}
+      aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={favorite}
+      className={cn(
+        "absolute top-1 right-1 grid place-items-center h-6 w-6 rounded-full transition-colors",
+        favorite
+          ? "text-favorite hover:text-favorite/80"
+          : "text-muted-foreground/60 hover:text-favorite",
+      )}
+    >
+      <Star className={cn("h-3.5 w-3.5", favorite && "fill-current")} />
+    </button>
+  </li>
+);
 
 // Re-export to avoid unused import warning on TypeBadge in dev builds
 export { TypeBadge };
