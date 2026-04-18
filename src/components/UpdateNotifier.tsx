@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
-import { BUILD_COMMIT } from "@/build-info";
 
 // Poll /version.json every PROBE_INTERVAL_MS. Vite emits this file at build
 // time with the current commit SHA — when it changes, a new deploy is live.
@@ -24,14 +23,13 @@ const fetchDeployedCommit = async (): Promise<string | null> => {
 };
 
 export const UpdateNotifier = () => {
+  const initialCommitRef = useRef<string | null>(null);
   const promptedRef = useRef(false);
   const toastIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
     // Skip in dev — HMR handles updates and there's no built version.json.
     if (import.meta.env.DEV) return;
-    // Skip when we don't have a real build commit to compare against.
-    if (!BUILD_COMMIT || BUILD_COMMIT === "dev") return;
 
     let cancelled = false;
     let intervalId: number | undefined;
@@ -55,10 +53,17 @@ export const UpdateNotifier = () => {
       });
     };
 
+    // Capture the deployed commit at first load, then prompt only when a
+    // later poll observes a different value. This avoids false positives
+    // caused by the baked-in BUILD_COMMIT lagging behind the publish SHA.
     const check = async () => {
       const deployed = await fetchDeployedCommit();
       if (cancelled || !deployed) return;
-      if (deployed !== BUILD_COMMIT) {
+      if (initialCommitRef.current === null) {
+        initialCommitRef.current = deployed;
+        return;
+      }
+      if (deployed !== initialCommitRef.current) {
         promptRefresh();
         if (intervalId) window.clearInterval(intervalId);
       }
