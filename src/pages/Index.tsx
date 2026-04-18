@@ -110,6 +110,7 @@ const Index = () => {
                 index={i}
                 onAdd={() => openPicker(i)}
                 onRemove={() => handleRemove(i)}
+                isCritical={member ? criticalMemberIds.has(member.id) : false}
               />
             ))}
           </div>

@@ -9,9 +9,10 @@ interface TeamSlotProps {
   onAdd: () => void;
   onRemove: () => void;
   index: number;
+  isCritical?: boolean;
 }
 
-export const TeamSlot = ({ pokemon, onAdd, onRemove, index }: TeamSlotProps) => {
+export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical }: TeamSlotProps) => {
   if (!pokemon) {
     return (
       <button
@@ -34,8 +35,20 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index }: TeamSlotProps) => 
       initial={{ opacity: 0, scale: 0.8, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
-      className="relative aspect-square rounded-2xl bg-gradient-card shadow-card overflow-hidden"
+      className={cn(
+        "relative aspect-square rounded-2xl bg-gradient-card shadow-card overflow-hidden",
+        isCritical &&
+          "ring-2 ring-destructive ring-offset-2 ring-offset-background animate-pulse-danger",
+      )}
     >
+      {isCritical && (
+        <span
+          className="absolute top-1 left-1 z-10 px-1.5 py-0.5 rounded-full bg-destructive text-destructive-foreground text-[8px] font-display font-bold uppercase tracking-wider"
+          title="Part of a critical shared weakness"
+        >
+          Risk
+        </span>
+      )}
       <button
         onClick={onRemove}
         className="absolute top-1 right-1 z-10 grid h-6 w-6 place-items-center rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
