@@ -1,17 +1,12 @@
 import { GitCommit, Clock } from "lucide-react";
+import { BUILD_COMMIT, BUILD_TIME, REPO_URL } from "@/build-info";
 
-// Build-time constants injected via Vite `define` (see vite.config.ts).
-declare const __BUILD_COMMIT__: string;
-declare const __BUILD_TIME__: string;
-declare const __REPO_URL__: string;
-
-const COMMIT = __BUILD_COMMIT__;
-const BUILD_TIME = __BUILD_TIME__;
-const REPO_URL = __REPO_URL__;
-
-const shortSha = COMMIT && COMMIT !== "dev" ? COMMIT.slice(0, 7) : "dev";
+const shortSha =
+  BUILD_COMMIT && BUILD_COMMIT !== "dev" ? BUILD_COMMIT.slice(0, 7) : "dev";
 const commitHref =
-  COMMIT && COMMIT !== "dev" ? `${REPO_URL}/commit/${COMMIT}` : REPO_URL;
+  BUILD_COMMIT && BUILD_COMMIT !== "dev"
+    ? `${REPO_URL}/commit/${BUILD_COMMIT}`
+    : REPO_URL;
 
 const formatBuildTime = (iso: string): string => {
   const d = new Date(iso);
