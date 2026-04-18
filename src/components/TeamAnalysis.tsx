@@ -1,11 +1,12 @@
-import { useMemo } from "react";
-import { motion } from "framer-motion";
-import { AlertTriangle, Shield, ShieldOff } from "lucide-react";
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, ChevronDown, Shield, ShieldOff } from "lucide-react";
 import {
   POKEMON_TYPES,
   TYPE_LABEL,
   classify,
   getMultiplier,
+  getOffensiveMatchups,
   type PokemonType,
 } from "@/lib/pokemon-types";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
@@ -24,6 +25,7 @@ interface TypeRow {
 }
 
 export const TeamAnalysis = ({ team }: AnalysisProps) => {
+  const [expandedType, setExpandedType] = useState<PokemonType | null>(null);
   const rows = useMemo<TypeRow[]>(() => {
     return POKEMON_TYPES.map((attacker, idx) => {
       let weak = 0;
@@ -40,11 +42,8 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
       }
       return { type: attacker, weakCount: weak, resistCount: resist, weakMembers, idx };
     }).sort((a, b) => {
-      // Primary: most weaknesses first.
       if (b.weakCount !== a.weakCount) return b.weakCount - a.weakCount;
-      // Secondary: least resistances first.
       if (a.resistCount !== b.resistCount) return a.resistCount - b.resistCount;
-      // Tiebreaker: original POKEMON_TYPES order (stable default).
       return a.idx - b.idx;
     });
   }, [team]);
@@ -124,7 +123,15 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
         </div>
         <ul className="space-y-1.5">
           {rows.map((row) => (
-            <CoverageRow key={row.type} row={row} teamSize={team.length} />
+            <CoverageRow
+              key={row.type}
+              row={row}
+              teamSize={team.length}
+              expanded={expandedType === row.type}
+              onToggle={() =>
+                setExpandedType((cur) => (cur === row.type ? null : row.type))
+              }
+            />
           ))}
         </ul>
         <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
@@ -140,53 +147,143 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
   );
 };
 
-const CoverageRow = ({ row, teamSize }: { row: TypeRow; teamSize: number }) => {
+const CoverageRow = ({
+  row,
+  teamSize,
+  expanded,
+  onToggle,
+}: {
+  row: TypeRow;
+  teamSize: number;
+  expanded: boolean;
+  onToggle: () => void;
+}) => {
   const danger = row.weakCount >= 3;
+  const matchups = useMemo(() => getOffensiveMatchups(row.type), [row.type]);
   return (
     <li
       className={cn(
-        "grid grid-cols-[80px_1fr_auto] items-center gap-2 py-1.5 px-2 rounded-lg transition-colors",
+        "rounded-lg transition-colors",
         danger && "bg-destructive/10",
+        expanded && !danger && "bg-secondary/40",
       )}
     >
-      <span
-        className={cn(
-          "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-center text-primary-foreground",
-          `bg-type-${row.type}`,
-        )}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-label={`Show offensive matchups for ${TYPE_LABEL[row.type]}`}
+        className="w-full grid grid-cols-[80px_1fr_auto_auto] items-center gap-2 py-1.5 px-2 rounded-lg text-left hover:bg-secondary/30 transition-colors"
       >
-        {TYPE_LABEL[row.type]}
-      </span>
-      <div className="flex items-center gap-1 h-5">
-        {/* Weakness bar (red, left) */}
-        <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden flex justify-end">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${(row.weakCount / Math.max(teamSize, 1)) * 100}%` }}
-            transition={{ duration: 0.4 }}
-            className={cn("h-full rounded-full", danger ? "bg-destructive" : "bg-warning")}
-          />
-        </div>
-        <div className="w-px h-3 bg-border" />
-        {/* Resistance bar (green, right) */}
-        <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${(row.resistCount / Math.max(teamSize, 1)) * 100}%` }}
-            transition={{ duration: 0.4 }}
-            className="h-full rounded-full bg-success"
-          />
-        </div>
-      </div>
-      <div className="flex items-center gap-2 text-[11px] font-mono w-14 justify-end">
-        <span className={cn("font-bold", row.weakCount > 0 ? (danger ? "text-destructive" : "text-warning") : "text-muted-foreground")}>
-          {row.weakCount}
+        <span
+          className={cn(
+            "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-center text-primary-foreground",
+            `bg-type-${row.type}`,
+          )}
+        >
+          {TYPE_LABEL[row.type]}
         </span>
-        <span className="text-muted-foreground">/</span>
-        <span className={cn("font-bold", row.resistCount > 0 ? "text-success" : "text-muted-foreground")}>
-          {row.resistCount}
-        </span>
-      </div>
+        <div className="flex items-center gap-1 h-5">
+          <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden flex justify-end">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(row.weakCount / Math.max(teamSize, 1)) * 100}%` }}
+              transition={{ duration: 0.4 }}
+              className={cn("h-full rounded-full", danger ? "bg-destructive" : "bg-warning")}
+            />
+          </div>
+          <div className="w-px h-3 bg-border" />
+          <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(row.resistCount / Math.max(teamSize, 1)) * 100}%` }}
+              transition={{ duration: 0.4 }}
+              className="h-full rounded-full bg-success"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] font-mono w-14 justify-end">
+          <span className={cn("font-bold", row.weakCount > 0 ? (danger ? "text-destructive" : "text-warning") : "text-muted-foreground")}>
+            {row.weakCount}
+          </span>
+          <span className="text-muted-foreground">/</span>
+          <span className={cn("font-bold", row.resistCount > 0 ? "text-success" : "text-muted-foreground")}>
+            {row.resistCount}
+          </span>
+        </div>
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 text-muted-foreground transition-transform",
+            expanded && "rotate-180",
+          )}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            key="matchups"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 pt-1 space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {TYPE_LABEL[row.type]} attacks vs. defending types
+              </p>
+              <MatchupGroup label="Super effective" tone="weak" types={matchups.superEffective} />
+              <MatchupGroup label="Resisted" tone="resist" types={matchups.resisted} />
+              <MatchupGroup label="No effect" tone="immune" types={matchups.immune} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </li>
+  );
+};
+
+const MatchupGroup = ({
+  label,
+  tone,
+  types,
+}: {
+  label: string;
+  tone: "weak" | "resist" | "immune";
+  types: PokemonType[];
+}) => {
+  const accent =
+    tone === "weak"
+      ? "text-destructive"
+      : tone === "resist"
+      ? "text-success"
+      : "text-muted-foreground";
+  const multiplier = tone === "weak" ? "2×" : tone === "resist" ? "½×" : "0×";
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <span className={cn("text-[10px] font-display font-bold uppercase tracking-wider", accent)}>
+          {label}
+        </span>
+        <span className="text-[10px] font-mono text-muted-foreground">{multiplier}</span>
+      </div>
+      {types.length === 0 ? (
+        <p className="text-[10px] text-muted-foreground italic">None</p>
+      ) : (
+        <div className="flex flex-wrap gap-1">
+          {types.map((t) => (
+            <span
+              key={t}
+              className={cn(
+                "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground",
+                `bg-type-${t}`,
+              )}
+            >
+              {TYPE_LABEL[t]}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };

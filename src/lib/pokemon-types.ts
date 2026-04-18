@@ -46,3 +46,21 @@ export function classify(mult: number): Effectiveness {
 export const TYPE_LABEL: Record<PokemonType, string> = Object.fromEntries(
   POKEMON_TYPES.map(t => [t, t.charAt(0).toUpperCase() + t.slice(1)])
 ) as Record<PokemonType, string>;
+
+/** Offensive matchups for an attacking type vs each single defending type. */
+export function getOffensiveMatchups(attacker: PokemonType): {
+  superEffective: PokemonType[];
+  resisted: PokemonType[];
+  immune: PokemonType[];
+} {
+  const superEffective: PokemonType[] = [];
+  const resisted: PokemonType[] = [];
+  const immune: PokemonType[] = [];
+  for (const def of POKEMON_TYPES) {
+    const m = CHART[attacker][def] ?? 1;
+    if (m === 0) immune.push(def);
+    else if (m > 1) superEffective.push(def);
+    else if (m < 1) resisted.push(def);
+  }
+  return { superEffective, resisted, immune };
+}
