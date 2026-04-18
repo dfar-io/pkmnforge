@@ -88,28 +88,21 @@ const Index = () => {
   };
 
   const handleRemove = (slot: number) => {
-    const removed = team[slot];
-    if (!removed) return;
-    const snapshot = team;
     setTeam((prev) => prev.filter((_, i) => i !== slot));
-    toast(`Removed ${removed.name}`, {
-      action: {
-        label: "Undo",
-        onClick: () => setTeam(snapshot),
-      },
-    });
   };
 
-  const clearAll = () => {
-    if (team.length === 0) return;
-    const snapshot = team;
+  const performClear = () => {
     setTeam([]);
-    toast(`Cleared team (${snapshot.length})`, {
-      action: {
-        label: "Undo",
-        onClick: () => setTeam(snapshot),
-      },
-    });
+    toast.success("Team cleared");
+  };
+
+  const requestClear = () => {
+    if (team.length === 0) return;
+    if (team.length >= CONFIRM_CLEAR_THRESHOLD) {
+      setConfirmClearOpen(true);
+      return;
+    }
+    performClear();
   };
 
   const excludeIds = team.map((p) => p.id);
