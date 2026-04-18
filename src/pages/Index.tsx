@@ -1,122 +1,22 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import { fetchPokemonDetail } from "@/lib/pokeapi";
 import { TeamGrid } from "@/components/TeamGrid";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { HeaderActions } from "@/components/HeaderActions";
+import { useTeam } from "@/hooks/useTeam";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 const TEAM_SIZE = 6;
-const STORAGE_KEY = "pkmnforge.team.v1";
-const LEGACY_STORAGE_KEYS = ["teamforge.team.v1"] as const;
-
-// Parse `?team=1,4,7` into a list of valid dex IDs (deduped, capped to TEAM_SIZE).
-const parseTeamFromQuery = (): number[] => {
-  if (typeof window === "undefined") return [];
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const raw = params.get("team");
-    if (!raw) return [];
-    const ids: number[] = [];
-    for (const part of raw.split(",")) {
-      const n = Number(part.trim());
-      if (Number.isInteger(n) && n > 0 && n <= 1025 && !ids.includes(n)) {
-        ids.push(n);
-      }
-      if (ids.length >= TEAM_SIZE) break;
-    }
-    return ids;
-  } catch {
-    return [];
-  }
-};
-
-const loadStoredTeam = (): PokemonDetail[] => {
-  if (typeof window === "undefined") return [];
-  if (parseTeamFromQuery().length > 0) return [];
-  try {
-    let raw = window.localStorage.getItem(STORAGE_KEY);
-
-    if (!raw) {
-      for (const legacy of LEGACY_STORAGE_KEYS) {
-        const legacyRaw = window.localStorage.getItem(legacy);
-        if (legacyRaw) {
-          raw = legacyRaw;
-          window.localStorage.setItem(STORAGE_KEY, legacyRaw);
-          window.localStorage.removeItem(legacy);
-          break;
-        }
-      }
-    } else {
-      for (const legacy of LEGACY_STORAGE_KEYS) {
-        window.localStorage.removeItem(legacy);
-      }
-    }
-
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (p): p is PokemonDetail =>
-          p &&
-          typeof p.id === "number" &&
-          typeof p.name === "string" &&
-          Array.isArray(p.types) &&
-          typeof p.sprite === "string",
-      )
-      .slice(0, TEAM_SIZE);
-  } catch {
-    return [];
-  }
-};
 
 const Index = () => {
-  const [team, setTeam] = useState<PokemonDetail[]>(loadStoredTeam);
+  const [team, setTeam] = useTeam(TEAM_SIZE);
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(team));
-    } catch {
-      /* ignore */
-    }
-  }, [team]);
-
-  useEffect(() => {
-    const ids = parseTeamFromQuery();
-    if (ids.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const details = await Promise.all(
-          ids.map((id) => fetchPokemonDetail(id).catch(() => null)),
-        );
-        if (cancelled) return;
-        const valid = details.filter((d): d is PokemonDetail => Boolean(d));
-        if (valid.length > 0) {
-          setTeam(valid.slice(0, TEAM_SIZE));
-          toast.success(`Loaded shared team (${valid.length})`);
-        }
-      } finally {
-        if (!cancelled) {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("team");
-          window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const [justCopied, setJustCopied] = useState(false);
+
   const handleShare = async () => {
     if (team.length === 0) return;
     const url = new URL(window.location.href);
@@ -147,6 +47,7 @@ const Index = () => {
     setPickerOpen(true);
   };
 
+  // Keyboard shortcut: "n" or "+" opens the picker.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
