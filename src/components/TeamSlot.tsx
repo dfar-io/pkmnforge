@@ -1,22 +1,25 @@
 import { motion } from "framer-motion";
-import { X, Plus, GripVertical, Star } from "lucide-react";
+import { X, Plus, GripVertical, Star, Sparkles } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TypeIcon } from "./TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { useFavorites } from "@/hooks/useFavorites";
+import { getNatureById } from "@/lib/natures";
 import { cn } from "@/lib/utils";
 
 interface TeamSlotProps {
   pokemon?: PokemonDetail;
   onAdd: () => void;
   onRemove: () => void;
+  onOpenDetail?: () => void;
+  natureId?: string;
   index: number;
   isCritical?: boolean;
   disabled?: boolean;
 }
 
-export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled }: TeamSlotProps) => {
+export const TeamSlot = ({ pokemon, onAdd, onRemove, onOpenDetail, natureId, index, isCritical, disabled }: TeamSlotProps) => {
   // Hooks must run unconditionally — call useSortable even for empty slots.
   // Empty slots use a stable, non-overlapping id and disabled=true so they
   // never participate in drag/sort behavior.
