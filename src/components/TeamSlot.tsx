@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { X, Plus, GripVertical } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TypeBadge } from "./TypeBadge";
+import { TypeIcon } from "./TypeBadge";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
 import { cn } from "@/lib/utils";
 
@@ -106,9 +106,9 @@ export const TeamSlot = ({ pokemon, onAdd, onRemove, index, isCritical, disabled
         <p className="truncate text-[10px] font-display font-semibold text-center mb-1">
           {formatName(pokemon.name)}
         </p>
-        <div className="flex items-center justify-center gap-1 flex-wrap">
+        <div className="flex items-center justify-center gap-1">
           {pokemon.types.map((t) => (
-            <TypeBadge key={t} type={t} size="sm" />
+            <TypeIcon key={t} type={t} />
           ))}
         </div>
       </div>
