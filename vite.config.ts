@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -25,6 +25,23 @@ const resolveCommitSha = (): string => {
   }
 };
 
+const COMMIT_SHA = resolveCommitSha();
+const BUILD_TIME = new Date().toISOString();
+
+// Emit /version.json into the build output. Used by UpdateNotifier to detect
+// new deploys without hashing index.html, and available for any runtime check.
+const versionJsonPlugin = (): Plugin => ({
+  name: "emit-version-json",
+  apply: "build",
+  generateBundle() {
+    this.emitFile({
+      type: "asset",
+      fileName: "version.json",
+      source: JSON.stringify({ commit: COMMIT_SHA, builtAt: BUILD_TIME }, null, 2),
+    });
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -34,7 +51,11 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    versionJsonPlugin(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -42,8 +63,8 @@ export default defineConfig(({ mode }) => ({
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
   define: {
-    __BUILD_COMMIT__: JSON.stringify(resolveCommitSha()),
-    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __BUILD_COMMIT__: JSON.stringify(COMMIT_SHA),
+    __BUILD_TIME__: JSON.stringify(BUILD_TIME),
     __REPO_URL__: JSON.stringify("https://github.com/dfar-io/pkmnforge"),
   },
 }));

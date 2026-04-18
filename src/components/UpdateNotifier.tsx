@@ -5,48 +5,34 @@ import { RefreshCw } from "lucide-react";
 
 declare const __BUILD_COMMIT__: string;
 
-// Poll index.html every PROBE_INTERVAL_MS, hashing the response. When the
-// hash changes after the initial read, a new deploy is live — prompt to refresh.
-// We use index.html because Vite rewrites its asset URLs on every build, so its
-// content reliably changes between deploys with zero extra build config.
+// Poll /version.json every PROBE_INTERVAL_MS. Vite emits this file at build
+// time with the current commit SHA — when it changes, a new deploy is live.
 const PROBE_INTERVAL_MS = 60_000;
 const INITIAL_DELAY_MS = 30_000;
 
-const hashString = async (s: string): Promise<string> => {
-  if (typeof crypto !== "undefined" && crypto.subtle) {
-    const buf = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(s));
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-  // Fallback: simple non-crypto hash. Good enough for change detection.
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
-  return String(h);
-};
-
-const fetchIndexHash = async (): Promise<string | null> => {
+const fetchDeployedCommit = async (): Promise<string | null> => {
   try {
-    const res = await fetch(`/index.html?t=${Date.now()}`, {
+    const res = await fetch(`/version.json?t=${Date.now()}`, {
       cache: "no-store",
       credentials: "same-origin",
     });
     if (!res.ok) return null;
-    const text = await res.text();
-    return hashString(text);
+    const data = (await res.json()) as { commit?: string };
+    return typeof data.commit === "string" ? data.commit : null;
   } catch {
     return null;
   }
 };
 
 export const UpdateNotifier = () => {
-  const initialHashRef = useRef<string | null>(null);
   const promptedRef = useRef(false);
   const toastIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
-    // Skip in dev — HMR handles updates and the dev server returns transformed HTML.
+    // Skip in dev — HMR handles updates and there's no built version.json.
     if (import.meta.env.DEV) return;
+    // Skip when we don't have a real build commit to compare against.
+    if (!__BUILD_COMMIT__ || __BUILD_COMMIT__ === "dev") return;
 
     let cancelled = false;
     let intervalId: number | undefined;
@@ -71,13 +57,9 @@ export const UpdateNotifier = () => {
     };
 
     const check = async () => {
-      const hash = await fetchIndexHash();
-      if (cancelled || !hash) return;
-      if (initialHashRef.current === null) {
-        initialHashRef.current = hash;
-        return;
-      }
-      if (hash !== initialHashRef.current) {
+      const deployed = await fetchDeployedCommit();
+      if (cancelled || !deployed) return;
+      if (deployed !== __BUILD_COMMIT__) {
         promptRefresh();
         if (intervalId) window.clearInterval(intervalId);
       }
@@ -102,10 +84,6 @@ export const UpdateNotifier = () => {
       if (toastIdRef.current !== null) toast.dismiss(toastIdRef.current);
     };
   }, []);
-
-  // Suppress unused warning for the build-time constant — referenced so future
-  // deploys could swap to a /version.json strategy without import churn.
-  void __BUILD_COMMIT__;
 
   return null;
 };
