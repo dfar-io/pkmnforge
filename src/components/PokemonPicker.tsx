@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, Star } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
 import { TypeIcon } from "./TypeBadge";
 import { cn } from "@/lib/utils";
+import { useFavorites } from "@/hooks/useFavorites";
 import { TypeBadge } from "./TypeBadge";
 
 interface PokemonPickerProps {
@@ -97,7 +98,17 @@ export const PokemonPicker = ({ open, onOpenChange, onSelect, excludeIds }: Poke
     setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   };
 
+  const { isFavorite, toggleFavorite } = useFavorites();
+
   const visible = filtered.slice(0, visibleCount);
+  const favoriteVisible = useMemo(
+    () => visible.filter((p) => isFavorite(p.id)),
+    [visible, isFavorite],
+  );
+  const nonFavoriteVisible = useMemo(
+    () => visible.filter((p) => !isFavorite(p.id)),
+    [visible, isFavorite],
+  );
 
   useEffect(() => {
     if (!sentinelRef.current) return;
