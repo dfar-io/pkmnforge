@@ -26,7 +26,7 @@ const formatBuildTime = (iso: string): string => {
 export const SiteFooter = () => {
   return (
     <footer className="mt-10 border-t border-border/60 bg-background/60">
-      <div className="max-w-2xl mx-auto px-4 py-5 text-[11px] text-muted-foreground flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="max-w-2xl mx-auto px-4 py-5 text-[11px] text-muted-foreground flex flex-col items-center justify-center gap-2 text-center sm:flex-row sm:gap-6">
         <p>
           Created by{" "}
           <a
