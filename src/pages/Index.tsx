@@ -76,10 +76,29 @@ const Index = () => {
   };
 
   const handleRemove = (slot: number) => {
+    const removed = team[slot];
+    if (!removed) return;
+    const snapshot = team;
     setTeam((prev) => prev.filter((_, i) => i !== slot));
+    toast(`Removed ${removed.name}`, {
+      action: {
+        label: "Undo",
+        onClick: () => setTeam(snapshot),
+      },
+    });
   };
 
-  const clearAll = () => setTeam([]);
+  const clearAll = () => {
+    if (team.length === 0) return;
+    const snapshot = team;
+    setTeam([]);
+    toast(`Cleared team (${snapshot.length})`, {
+      action: {
+        label: "Undo",
+        onClick: () => setTeam(snapshot),
+      },
+    });
+  };
 
   const excludeIds = team.map((p) => p.id);
 
