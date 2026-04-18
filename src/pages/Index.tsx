@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Check, Share2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { fetchPokemonDetail } from "@/lib/pokeapi";
 import {
   DndContext,
   closestCenter,
