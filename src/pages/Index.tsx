@@ -160,9 +160,11 @@ const Index = () => {
         <TeamGrid
           team={team}
           teamSize={TEAM_SIZE}
+          natures={natures}
           onOpenPicker={openPicker}
           onRemove={handleRemove}
           onReorder={setTeam}
+          onOpenDetail={(slot) => setDetailSlot(slot)}
         />
 
         <section>
@@ -184,6 +186,25 @@ const Index = () => {
         onOpenChange={setPickerOpen}
         onSelect={handleSelect}
         excludeIds={excludeIds}
+      />
+
+      <TeamSlotSheet
+        pokemon={detailSlot !== null ? team[detailSlot] ?? null : null}
+        open={detailSlot !== null && !!team[detailSlot]}
+        onOpenChange={(open) => {
+          if (!open) setDetailSlot(null);
+        }}
+        selectedNatureId={
+          detailSlot !== null && team[detailSlot]
+            ? natures[team[detailSlot].id]
+            : undefined
+        }
+        onSelectNature={(natureId) => {
+          if (detailSlot === null) return;
+          const member = team[detailSlot];
+          if (!member) return;
+          setNature(member.id, natureId);
+        }}
       />
 
       <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
