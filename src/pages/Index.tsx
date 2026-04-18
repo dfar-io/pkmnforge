@@ -7,15 +7,27 @@ import { PokemonPicker } from "@/components/PokemonPicker";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { HeaderActions } from "@/components/HeaderActions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTeam } from "@/hooks/useTeam";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 const TEAM_SIZE = 6;
+const CONFIRM_CLEAR_THRESHOLD = 4;
 
 const Index = () => {
   const [team, setTeam] = useTeam(TEAM_SIZE);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [justCopied, setJustCopied] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   const handleShare = async () => {
     if (team.length === 0) return;
@@ -76,28 +88,21 @@ const Index = () => {
   };
 
   const handleRemove = (slot: number) => {
-    const removed = team[slot];
-    if (!removed) return;
-    const snapshot = team;
     setTeam((prev) => prev.filter((_, i) => i !== slot));
-    toast(`Removed ${removed.name}`, {
-      action: {
-        label: "Undo",
-        onClick: () => setTeam(snapshot),
-      },
-    });
   };
 
-  const clearAll = () => {
-    if (team.length === 0) return;
-    const snapshot = team;
+  const performClear = () => {
     setTeam([]);
-    toast(`Cleared team (${snapshot.length})`, {
-      action: {
-        label: "Undo",
-        onClick: () => setTeam(snapshot),
-      },
-    });
+    toast.success("Team cleared");
+  };
+
+  const requestClear = () => {
+    if (team.length === 0) return;
+    if (team.length >= CONFIRM_CLEAR_THRESHOLD) {
+      setConfirmClearOpen(true);
+      return;
+    }
+    performClear();
   };
 
   const excludeIds = team.map((p) => p.id);
@@ -132,7 +137,7 @@ const Index = () => {
             team={team}
             onLoad={(members) => setTeam(members.slice(0, TEAM_SIZE))}
             onShare={handleShare}
-            onClear={clearAll}
+            onClear={requestClear}
             justCopied={justCopied}
           />
         </div>
@@ -167,6 +172,26 @@ const Index = () => {
         onSelect={handleSelect}
         excludeIds={excludeIds}
       />
+
+      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear your team?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove all {team.length} Pokémon from your current team. Saved teams aren't affected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={performClear}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Clear team
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <SiteFooter />
     </div>
