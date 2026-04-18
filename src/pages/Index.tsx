@@ -1,5 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sparkles, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+  sortableKeyboardCoordinates,
+} from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { TeamSlot } from "@/components/TeamSlot";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
