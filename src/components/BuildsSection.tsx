@@ -99,7 +99,9 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         ? prev
         : [...prev, { pokemonId: pokemon.id, buildId: b.id, pokemon: slim }],
     );
-    toast.success(`${b.name} added to team`);
+    toast.success(`${b.name} added to team`, {
+      action: { label: "View team", onClick: () => navigate("/") },
+    });
   };
 
   /**
@@ -118,7 +120,9 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         return m;
       }),
     );
-    toast.success(`Swapped to "${b.name}"`);
+    toast.success(`Swapped to "${b.name}"`, {
+      action: { label: "View team", onClick: () => navigate("/") },
+    });
   };
 
   return (
