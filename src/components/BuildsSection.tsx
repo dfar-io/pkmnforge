@@ -180,7 +180,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleDelete(b)}
+                    onClick={() => setPendingDelete(b)}
                     aria-label="Delete build"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   >
