@@ -300,57 +300,51 @@ const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd 
           </div>
         </div>
       </Link>
-                <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleFavorite(p.id);
-                    }}
-                    aria-label={fav ? "Remove from favorites" : "Add to favorites"}
-                    aria-pressed={fav}
-                    className={cn(
-                      "grid place-items-center h-6 w-6 rounded-full transition-colors",
-                      fav
-                        ? "text-favorite hover:text-favorite/80"
-                        : "text-muted-foreground/60 hover:text-favorite",
-                    )}
-                  >
-                    <Star className={cn("h-3.5 w-3.5", fav && "fill-current")} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAdd(p.id, p.name);
-                    }}
-                    disabled={inTeam || isFull || adding === p.id}
-                    aria-label={inTeam ? "Already in team" : "Add to team"}
-                    className={cn(
-                      "grid place-items-center h-6 w-6 rounded-full transition-colors",
-                      inTeam
-                        ? "text-success"
-                        : isFull
-                          ? "text-muted-foreground/30 cursor-not-allowed"
-                          : "text-muted-foreground/60 hover:text-primary",
-                    )}
-                  >
-                    {adding === p.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : inTeam ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <Plus className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <div ref={sentinelRef} className="h-8" />
-    </div>
+      <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleFav();
+          }}
+          aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={fav}
+          className={cn(
+            "grid place-items-center h-7 w-7 rounded-full transition-colors",
+            fav
+              ? "text-favorite hover:text-favorite/80"
+              : "text-muted-foreground/60 hover:text-favorite",
+          )}
+        >
+          <Star className={cn("h-3.5 w-3.5", fav && "fill-current")} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onAdd();
+          }}
+          disabled={inTeam || isFull || adding}
+          aria-label={inTeam ? "Already in team" : "Add to team"}
+          className={cn(
+            "grid place-items-center h-7 w-7 rounded-full transition-colors",
+            inTeam
+              ? "text-success"
+              : isFull
+                ? "text-muted-foreground/30 cursor-not-allowed"
+                : "text-muted-foreground/60 hover:text-primary",
+          )}
+        >
+          {adding ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : inTeam ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Plus className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
+    </li>
   );
 };
 
