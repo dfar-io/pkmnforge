@@ -145,16 +145,18 @@ export function formatName(name: string): string {
     .join(" ");
 }
 
-// Held items list. Held items in PokeAPI are part of the broader items list,
-// but the most common competitive items live in specific categories. We pull
-// a generous slice and let the user search by name.
+// Held items only. PokeAPI tags items that a Pokémon can actually hold with
+// the `holdable` item-attribute, which gives us the competitively relevant
+// subset (berries, choice items, plates, etc.) instead of all ~2150 items
+// (TMs, key items, mail, …).
 let cachedItems: string[] | null = null;
 export async function fetchHeldItems(): Promise<string[]> {
   if (cachedItems) return cachedItems;
-  // PokeAPI has ~2150 items total; one page is fine.
-  const res = await fetch("https://pokeapi.co/api/v2/item?limit=2200&offset=0");
+  const res = await fetch("https://pokeapi.co/api/v2/item-attribute/holdable");
   const data = await res.json();
-  cachedItems = (data.results as { name: string }[]).map((i) => i.name);
+  const names = (data.items as { name: string }[]).map((i) => i.name);
+  names.sort((a, b) => a.localeCompare(b));
+  cachedItems = names;
   return cachedItems;
 }
 
