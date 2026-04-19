@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, X, Loader2, Star, Plus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
