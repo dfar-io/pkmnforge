@@ -133,21 +133,42 @@ const PokedexPage = () => {
     if (q) {
       base = base.filter((p) => p.name.includes(q) || String(p.id) === q);
     }
-    // Sort by Smogon tier ascending (AG → Uber → OU → … → LC), then by dex id
-    // for stable ordering within a tier and for unranked Pokémon.
-    return [...base].sort((a, b) => {
-      const ra = getSmogonTierRank(a.id);
-      const rb = getSmogonTierRank(b.id);
-      if (ra !== rb) return ra - rb;
-      return a.id - b.id;
-    });
-  }, [list, query, activeTypes, typeIdsMap, matchMode]);
+    // Apply sort. Default tiebreaker is dex id for stable ordering.
+    const sorted = [...base];
+    if (sortMode === "dex") {
+      sorted.sort((a, b) => a.id - b.id);
+    } else if (sortMode === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === "bst") {
+      // Use cached BST when available; uncached Pokémon sort to the end.
+      // Note: this re-evaluates on every filter change (cheap), and BST will
+      // "fill in" as users visit Pokémon detail pages and populate the cache.
+      sorted.sort((a, b) => {
+        const ba = getCachedBaseStatTotal(a.id);
+        const bb = getCachedBaseStatTotal(b.id);
+        if (ba == null && bb == null) return a.id - b.id;
+        if (ba == null) return 1;
+        if (bb == null) return -1;
+        if (ba !== bb) return bb - ba; // higher BST first
+        return a.id - b.id;
+      });
+    } else {
+      // tier (default) — AG → Uber → OU → … → LC, then dex id.
+      sorted.sort((a, b) => {
+        const ra = getSmogonTierRank(a.id);
+        const rb = getSmogonTierRank(b.id);
+        if (ra !== rb) return ra - rb;
+        return a.id - b.id;
+      });
+    }
+    return sorted;
+  }, [list, query, activeTypes, typeIdsMap, matchMode, sortMode]);
 
   const toggleType = (t: PokemonType) => {
     setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   };
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode, sortMode]);
 
   useEffect(() => {
     if (!sentinelRef.current) return;
