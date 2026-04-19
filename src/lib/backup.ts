@@ -85,9 +85,10 @@ export const parseBackup = (text: string): ParsedBackup => {
   const rawFavs = Array.isArray(data.favorites) ? data.favorites : [];
   const builds = rawBuilds.filter(isBuild) as PokemonBuild[];
   const savedTeams = rawTeams.filter(isSavedTeam) as SavedTeam[];
-  const favorites = Array.from(
-    new Set(rawFavs.filter((n: unknown): n is number => Number.isInteger(n) && (n as number) > 0)),
+  const validFavs = (rawFavs as unknown[]).filter(
+    (n): n is number => Number.isInteger(n) && (n as number) > 0,
   );
+  const favorites = Array.from(new Set(validFavs));
   return {
     builds,
     savedTeams,
