@@ -9,6 +9,7 @@ import {
   type PokemonFullDetail,
 } from "@/lib/pokeapi";
 import { TypeIcon } from "@/components/TypeBadge";
+import { TypeMatchups } from "@/components/TypeMatchups";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
 import { BuildsSection } from "@/components/BuildsSection";
@@ -159,6 +160,13 @@ const PokemonDetailPage = () => {
             <span className="text-xs font-mono w-8 text-right">{total}</span>
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Type matchups
+        </h2>
+        <TypeMatchups types={detail.types} />
       </section>
 
       <section>
