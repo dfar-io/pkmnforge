@@ -36,6 +36,23 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
   const isFull = team.length >= TEAM_SIZE;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return;
+    if (builds.some((b) => b.id === editId)) {
+      setEditingId(editId);
+      setCreating(false);
+      requestAnimationFrame(() => {
+        document.getElementById("builds")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, builds.length]);
+
   const slim = {
     id: pokemon.id,
     name: pokemon.name,
