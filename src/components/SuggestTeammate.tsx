@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lightbulb, Loader2, Plus, Sparkles } from "lucide-react";
+import { ChevronRight, Lightbulb, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TypeBadge } from "./TypeBadge";
 import {
@@ -15,12 +16,10 @@ import {
   type Suggestion,
 } from "@/lib/suggest";
 import { TYPE_LABEL } from "@/lib/pokemon-types";
-import { cn } from "@/lib/utils";
 
 interface SuggestTeammateProps {
   team: PokemonDetail[];
   excludeIds: number[];
-  onPick: (pokemon: PokemonDetail) => void;
   canAdd: boolean;
 }
 
@@ -31,7 +30,6 @@ const TOP_N = 5;
 export const SuggestTeammate = ({
   team,
   excludeIds,
-  onPick,
   canAdd,
 }: SuggestTeammateProps) => {
   const [loading, setLoading] = useState(false);
@@ -183,14 +181,17 @@ export const SuggestTeammate = ({
                   )}
                 </div>
                 <Button
+                  asChild
                   size="icon"
-                  variant="default"
-                  onClick={() => onPick(s.pokemon)}
-                  disabled={!canAdd}
-                  className={cn("h-9 w-9 shrink-0 rounded-full")}
-                  aria-label={`Add ${s.pokemon.name} to team`}
+                  variant="ghost"
+                  className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:text-primary"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Link
+                    to={`/pokedex/${s.pokemon.id}`}
+                    aria-label={`View ${s.pokemon.name} in Pokédex`}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
                 </Button>
               </motion.li>
             ))}
