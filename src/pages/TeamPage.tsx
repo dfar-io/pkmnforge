@@ -19,13 +19,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { Plus, X, GripVertical, Sparkles } from "lucide-react";
+import { Plus, X, GripVertical } from "lucide-react";
 import { TypeIcon } from "@/components/TypeBadge";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
-import { getNatureById } from "@/lib/natures";
+
 import { formatName } from "@/lib/pokeapi";
 import type { TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,6 @@ const TeamPage = () => {
                     key={`slot-${member.pokemonId}-${member.buildId}`}
                     member={member}
                     buildName={build?.name ?? "No build"}
-                    natureLabel={getNatureById(build?.natureId)?.name}
                     onRemove={() => handleRemove(i)}
                     onOpenDetail={() => navigate(`/pokedex/${member.pokemonId}`)}
                   />
@@ -129,12 +128,11 @@ const TeamPage = () => {
 interface BuildSlotProps {
   member: TeamMember;
   buildName: string;
-  natureLabel?: string;
   onRemove: () => void;
   onOpenDetail: () => void;
 }
 
-const BuildSlot = ({ member, buildName, natureLabel, onRemove, onOpenDetail }: BuildSlotProps) => {
+const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSlotProps) => {
   const sortable = useSortable({
     id: `slot-${member.pokemonId}-${member.buildId}`,
   });
@@ -192,14 +190,6 @@ const BuildSlot = ({ member, buildName, natureLabel, onRemove, onOpenDetail }: B
             <TypeIcon key={t} type={t} />
           ))}
         </div>
-        {natureLabel && (
-          <div className="mt-1 flex justify-center">
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-display font-bold uppercase tracking-wider text-primary">
-              <Sparkles className="h-2 w-2" />
-              {natureLabel}
-            </span>
-          </div>
-        )}
       </div>
 
       <GripVertical className="absolute bottom-1 right-1 h-3 w-3 text-muted-foreground/40 pointer-events-none" />
