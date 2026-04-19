@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, Upload, AlertTriangle, Package, Users, Star } from "lucide-react";
+import { Download, Upload, AlertTriangle, Package, Users, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import {
 import { useBuilds } from "@/hooks/useBuilds";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedTeams } from "@/hooks/useSavedTeams";
+import { clearPokeapiCaches } from "@/lib/pokeapi";
 import {
   buildBackup,
   downloadJson,
@@ -36,6 +37,7 @@ const SettingsPage = () => {
     filename: string;
   } | null>(null);
   const [mode, setMode] = useState<ImportMode>("merge");
+  const [clearDialogOpen, setClearDialogOpen] = useState(false);
 
   useEffect(() => {
     document.title = "Settings – Pokénex";
@@ -98,6 +100,16 @@ const SettingsPage = () => {
       `Imported ${parsed.builds.length} builds, ${parsed.savedTeams.length} teams, ${parsed.favorites.length} favorites${skipNote}`,
     );
     setPending(null);
+  };
+
+  const handleClearAll = () => {
+    replaceBuilds([]);
+    replaceTeams([]);
+    replaceFavorites([]);
+    const { items, pokemon } = clearPokeapiCaches();
+    const cacheNote = items > 0 || pokemon > 0 ? " and cleared caches" : "";
+    toast.success(`All data wiped${cacheNote}`);
+    setClearDialogOpen(false);
   };
 
   return (
@@ -167,6 +179,23 @@ const SettingsPage = () => {
             className="sr-only"
             onChange={handleFileChange}
           />
+        </div>
+
+        <div className="rounded-2xl bg-gradient-card shadow-card p-4 space-y-3 border border-destructive/20">
+          <div>
+            <h3 className="font-display text-lg font-bold text-destructive">Danger Zone</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Permanently delete all your builds, saved teams, favorites, and cached data. This cannot be undone.
+            </p>
+          </div>
+          <Button 
+            onClick={() => setClearDialogOpen(true)} 
+            className="w-full" 
+            variant="destructive"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear all data
+          </Button>
         </div>
       </section>
 
@@ -240,6 +269,42 @@ const SettingsPage = () => {
               }
             >
               {mode === "replace" ? "Replace data" : "Merge data"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={clearDialogOpen} onOpenChange={setClearDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Clear all data?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>
+                  This will permanently delete:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li><span className="text-foreground font-medium">{builds.length} builds</span></li>
+                  <li><span className="text-foreground font-medium">{teams.length} saved teams</span></li>
+                  <li><span className="text-foreground font-medium">{favorites.length} favorites</span></li>
+                  <li>All cached Pokédex data</li>
+                </ul>
+                <p className="text-destructive font-medium">
+                  This action cannot be undone.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Yes, clear everything
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
