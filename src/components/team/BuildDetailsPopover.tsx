@@ -1,4 +1,5 @@
-import { Info } from "lucide-react";
+import { Info, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getNatureById } from "@/lib/natures";
 import { formatName } from "@/lib/pokeapi";
@@ -6,6 +7,7 @@ import type { PokemonBuild } from "@/lib/builds";
 
 interface BuildDetailsPopoverProps {
   build: PokemonBuild | undefined;
+  pokemonId: number;
   pokemonName: string;
 }
 
@@ -13,7 +15,10 @@ interface BuildDetailsPopoverProps {
  * Small info button on a team slot that reveals the build's ability,
  * item, nature, and moves in a compact popover.
  */
-export const BuildDetailsPopover = ({ build, pokemonName }: BuildDetailsPopoverProps) => {
+export const BuildDetailsPopover = ({ build, pokemonId, pokemonName }: BuildDetailsPopoverProps) => {
+  const editHref = build
+    ? `/pokemon/${pokemonId}?edit=${encodeURIComponent(build.id)}#builds`
+    : `/pokemon/${pokemonId}#builds`;
   const nature = getNatureById(build?.natureId);
   const moves = (build?.moves ?? []).filter(Boolean);
 
@@ -77,6 +82,16 @@ export const BuildDetailsPopover = ({ build, pokemonName }: BuildDetailsPopoverP
             )}
           </>
         )}
+        <div className="pt-1 border-t border-border">
+          <Link
+            to={editHref}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center justify-center gap-1.5 w-full rounded-md py-1.5 text-xs font-medium text-primary hover:bg-accent transition-colors"
+          >
+            <Pencil className="h-3 w-3" />
+            {build ? "Edit build" : "Manage builds"}
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
@@ -34,6 +35,23 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const [importing, setImporting] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
   const isFull = team.length >= TEAM_SIZE;
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return;
+    if (builds.some((b) => b.id === editId)) {
+      setEditingId(editId);
+      setCreating(false);
+      requestAnimationFrame(() => {
+        document.getElementById("builds")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, builds.length]);
 
   const slim = {
     id: pokemon.id,
@@ -83,7 +101,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   };
 
   return (
-    <section>
+    <section id="builds" className="scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground">
           Builds <span className="opacity-60">({builds.length})</span>
