@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
+import { type BuildDraft } from "@/hooks/useBuilds";
 import { parseShowdownSet } from "@/lib/showdown";
 import { formatName, type PokemonFullDetail } from "@/lib/pokeapi";
 import { BUILD_NOTES_MAX } from "@/lib/builds";
@@ -20,6 +20,7 @@ interface ImportShowdownDialogProps {
   pokemon: PokemonFullDetail;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onImport: (draft: BuildDraft) => void;
 }
 
 const PLACEHOLDER = `Gyarados @ Heavy-Duty Boots
@@ -44,8 +45,8 @@ export const ImportShowdownDialog = ({
   pokemon,
   open,
   onOpenChange,
+  onImport,
 }: ImportShowdownDialogProps) => {
-  const { create } = useBuilds();
   const [text, setText] = useState("");
 
   const handleImport = () => {
@@ -78,8 +79,8 @@ export const ImportShowdownDialog = ({
       moves: parsed.moves,
       notes: buildNotesFromExtras(parsed.extras, parsed.displayName),
     };
-    const created = create(pokemon.id, draft);
-    toast.success(`Imported "${created.name}"`);
+    onImport(draft);
+    toast.success(`Imported "${draft.name}"`);
     setText("");
     onOpenChange(false);
   };
