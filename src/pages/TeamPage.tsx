@@ -23,7 +23,7 @@ import { Plus, X, GripVertical } from "lucide-react";
 import { TypeIcon } from "@/components/TypeBadge";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { OffensiveCoverage } from "@/components/OffensiveCoverage";
-import { SuggestTeammate } from "@/components/SuggestTeammate";
+import { SuggestTypes } from "@/components/SuggestTypes";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
 
@@ -68,7 +68,6 @@ const TeamPage = () => {
 
   const sortableIds = team.map((m) => `slot-${m.pokemonId}-${m.buildId}`);
   const pokemonOnly = team.map((m) => m.pokemon);
-  const excludeIds = team.map((m) => m.pokemonId);
 
   return (
     <>
@@ -116,7 +115,7 @@ const TeamPage = () => {
       </section>
 
       <section>
-        <SuggestTeammate team={pokemonOnly} excludeIds={excludeIds} canAdd={!isFull} />
+        <SuggestTypes team={pokemonOnly} />
       </section>
 
       <section>
