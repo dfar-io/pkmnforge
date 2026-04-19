@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useBuilds } from "@/hooks/useBuilds";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedTeams } from "@/hooks/useSavedTeams";
 import {
   buildBackup,
@@ -28,6 +29,7 @@ type ImportMode = "merge" | "replace";
 const SettingsPage = () => {
   const { builds, replaceAll: replaceBuilds } = useBuilds();
   const { teams, replaceAll: replaceTeams } = useSavedTeams();
+  const { favorites, replaceAll: replaceFavorites } = useFavorites();
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<{
     parsed: ParsedBackup;
@@ -40,11 +42,11 @@ const SettingsPage = () => {
   }, []);
 
   const handleExport = () => {
-    if (builds.length === 0 && teams.length === 0) {
+    if (builds.length === 0 && teams.length === 0 && favorites.length === 0) {
       toast.error("Nothing to export yet");
       return;
     }
-    const data = buildBackup(builds, teams);
+    const data = buildBackup(builds, teams, favorites);
     downloadJson(formatBackupFilename(), data);
     toast.success("Backup downloaded");
   };
@@ -60,7 +62,11 @@ const SettingsPage = () => {
     try {
       const text = await file.text();
       const parsed = parseBackup(text);
-      if (parsed.builds.length === 0 && parsed.savedTeams.length === 0) {
+      if (
+        parsed.builds.length === 0 &&
+        parsed.savedTeams.length === 0 &&
+        parsed.favorites.length === 0
+      ) {
         toast.error("Backup is empty");
         return;
       }
@@ -79,16 +85,17 @@ const SettingsPage = () => {
     if (mode === "replace") {
       replaceBuilds(parsed.builds);
       replaceTeams(parsed.savedTeams);
+      replaceFavorites(parsed.favorites);
     } else {
       replaceBuilds(mergeById(builds, parsed.builds));
       replaceTeams(mergeById(teams, parsed.savedTeams));
+      replaceFavorites(Array.from(new Set([...favorites, ...parsed.favorites])));
     }
-    const skipNote =
-      parsed.skipped.builds + parsed.skipped.savedTeams > 0
-        ? ` (skipped ${parsed.skipped.builds + parsed.skipped.savedTeams} invalid)`
-        : "";
+    const skippedTotal =
+      parsed.skipped.builds + parsed.skipped.savedTeams + parsed.skipped.favorites;
+    const skipNote = skippedTotal > 0 ? ` (skipped ${skippedTotal} invalid)` : "";
     toast.success(
-      `Imported ${parsed.builds.length} builds and ${parsed.savedTeams.length} teams${skipNote}`,
+      `Imported ${parsed.builds.length} builds, ${parsed.savedTeams.length} teams, ${parsed.favorites.length} favorites${skipNote}`,
     );
     setPending(null);
   };
