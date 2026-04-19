@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, X, Loader2, Star, ChevronRight, Check } from "lucide-react";
+import { Search, X, Loader2, Star, ChevronRight, Check, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   fetchPokemonIdsByType,
   fetchPokemonList,
   formatName,
+  getCachedBaseStatTotal,
   type PokemonListItem,
 } from "@/lib/pokeapi";
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
@@ -20,6 +21,20 @@ import { useBuilds } from "@/hooks/useBuilds";
 
 const PAGE_SIZE = 60;
 
+type SortMode = "tier" | "dex" | "name" | "bst";
+
+const SORT_LABEL: Record<SortMode, string> = {
+  tier: "Smogon tier",
+  dex: "Dex number",
+  name: "Name (A–Z)",
+  bst: "Base stat total",
+};
+
+const SORT_STORAGE_KEY = "pokenex.pokedex.sort.v1";
+
+const isSortMode = (v: unknown): v is SortMode =>
+  v === "tier" || v === "dex" || v === "name" || v === "bst";
+
 const PokedexPage = () => {
   const [list, setList] = useState<PokemonListItem[]>([]);
   const [query, setQuery] = useState("");
@@ -28,6 +43,17 @@ const PokedexPage = () => {
   const [typeIdsMap, setTypeIdsMap] = useState<Record<string, Set<number>>>({});
   const [typeLoading, setTypeLoading] = useState(false);
   const [matchMode, setMatchMode] = useState<"any" | "all">("any");
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    if (typeof window === "undefined") return "tier";
+    const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
+    return isSortMode(stored) ? stored : "tier";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+  }, [sortMode]);
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const location = useLocation();
@@ -107,21 +133,42 @@ const PokedexPage = () => {
     if (q) {
       base = base.filter((p) => p.name.includes(q) || String(p.id) === q);
     }
-    // Sort by Smogon tier ascending (AG → Uber → OU → … → LC), then by dex id
-    // for stable ordering within a tier and for unranked Pokémon.
-    return [...base].sort((a, b) => {
-      const ra = getSmogonTierRank(a.id);
-      const rb = getSmogonTierRank(b.id);
-      if (ra !== rb) return ra - rb;
-      return a.id - b.id;
-    });
-  }, [list, query, activeTypes, typeIdsMap, matchMode]);
+    // Apply sort. Default tiebreaker is dex id for stable ordering.
+    const sorted = [...base];
+    if (sortMode === "dex") {
+      sorted.sort((a, b) => a.id - b.id);
+    } else if (sortMode === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === "bst") {
+      // Use cached BST when available; uncached Pokémon sort to the end.
+      // Note: this re-evaluates on every filter change (cheap), and BST will
+      // "fill in" as users visit Pokémon detail pages and populate the cache.
+      sorted.sort((a, b) => {
+        const ba = getCachedBaseStatTotal(a.id);
+        const bb = getCachedBaseStatTotal(b.id);
+        if (ba == null && bb == null) return a.id - b.id;
+        if (ba == null) return 1;
+        if (bb == null) return -1;
+        if (ba !== bb) return bb - ba; // higher BST first
+        return a.id - b.id;
+      });
+    } else {
+      // tier (default) — AG → Uber → OU → … → LC, then dex id.
+      sorted.sort((a, b) => {
+        const ra = getSmogonTierRank(a.id);
+        const rb = getSmogonTierRank(b.id);
+        if (ra !== rb) return ra - rb;
+        return a.id - b.id;
+      });
+    }
+    return sorted;
+  }, [list, query, activeTypes, typeIdsMap, matchMode, sortMode]);
 
   const toggleType = (t: PokemonType) => {
     setActiveTypes((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
   };
 
-  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode]);
+  useEffect(() => setVisibleCount(PAGE_SIZE), [query, activeTypes, typeIdsMap, matchMode, sortMode]);
 
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -219,6 +266,27 @@ const PokedexPage = () => {
             </button>
           </div>
         )}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-display font-semibold">
+            {filtered.length} {filtered.length === 1 ? "Pokémon" : "Pokémon"}
+          </span>
+          <label className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 pl-2 pr-1 py-0.5 text-[10px] font-display font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowUpDown className="h-3 w-3" />
+            <span className="sr-only">Sort by</span>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className="bg-transparent border-0 outline-none cursor-pointer text-foreground py-1 pr-1 focus:outline-none"
+              aria-label="Sort Pokémon by"
+            >
+              {(Object.keys(SORT_LABEL) as SortMode[]).map((m) => (
+                <option key={m} value={m} className="bg-popover text-popover-foreground">
+                  {SORT_LABEL[m]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {list.length === 0 || (typeLoading && filtered.length === 0) ? (
