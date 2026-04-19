@@ -119,11 +119,11 @@ const TeamPage = () => {
       </section>
 
       <section>
-        <OffensiveCoverage team={team} />
+        <TeamAnalysis team={pokemonOnly} />
       </section>
 
       <section>
-        <TeamAnalysis team={pokemonOnly} />
+        <OffensiveCoverage team={team} />
       </section>
     </>
   );
