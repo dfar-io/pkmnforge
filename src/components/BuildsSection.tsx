@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
+import { ArrowLeftRight, Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const buildIdsInTeam = new Set(
     team.filter((m) => m.pokemonId === pokemon.id).map((m) => m.buildId),
   );
+  const hasPokemonInTeam = buildIdsInTeam.size > 0;
 
   const handleCreate = (draft: BuildDraft) => {
     const b = create(pokemon.id, draft);
@@ -98,6 +99,25 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         : [...prev, { pokemonId: pokemon.id, buildId: b.id, pokemon: slim }],
     );
     toast.success(`${b.name} added to team`);
+  };
+
+  /**
+   * Swap the team slot for this Pokémon to use build `b` instead.
+   * Replaces the first matching slot in place (preserves position).
+   */
+  const handleSwapInTeam = (b: PokemonBuild) => {
+    if (buildIdsInTeam.has(b.id)) return;
+    let swapped = false;
+    setTeam((prev) =>
+      prev.map((m) => {
+        if (!swapped && m.pokemonId === pokemon.id) {
+          swapped = true;
+          return { ...m, buildId: b.id };
+        }
+        return m;
+      }),
+    );
+    toast.success(`Swapped to "${b.name}"`);
   };
 
   return (
@@ -248,15 +268,24 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
 
               <Button
                 size="sm"
-                onClick={() => handleAddToTeam(b)}
-                disabled={inTeam || isFull}
-                variant={inTeam ? "secondary" : "default"}
+                onClick={() => {
+                  if (inTeam) return;
+                  if (hasPokemonInTeam) handleSwapInTeam(b);
+                  else handleAddToTeam(b);
+                }}
+                disabled={inTeam || (!hasPokemonInTeam && isFull)}
+                variant={inTeam ? "secondary" : hasPokemonInTeam ? "outline" : "default"}
                 className="w-full"
               >
                 {inTeam ? (
                   <>
                     <Check className="h-4 w-4 mr-1.5" />
-                    In your team
+                    Active in your team
+                  </>
+                ) : hasPokemonInTeam ? (
+                  <>
+                    <ArrowLeftRight className="h-4 w-4 mr-1.5" />
+                    Swap to this build
                   </>
                 ) : isFull ? (
                   "Team is full"
