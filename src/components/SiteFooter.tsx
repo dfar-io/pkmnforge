@@ -1,5 +1,7 @@
-import { GitCommit, Clock } from "lucide-react";
+import { GitCommit, Clock, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { BUILD_COMMIT, BUILD_TIME, REPO_URL } from "@/build-info";
+import { clearPokeapiCaches } from "@/lib/pokeapi";
 
 const shortSha =
   BUILD_COMMIT && BUILD_COMMIT !== "dev" ? BUILD_COMMIT.slice(0, 7) : "dev";
@@ -16,6 +18,18 @@ const formatBuildTime = (iso: string): string => {
     `${d.getFullYear()}.${pad(d.getMonth() + 1)}.${pad(d.getDate())} ` +
     `${pad(d.getHours())}:${pad(d.getMinutes())}`
   );
+};
+
+const handleClearCache = () => {
+  const { items, pokemon } = clearPokeapiCaches();
+  if (items === 0 && pokemon === 0) {
+    toast.success("Cache already empty");
+  } else {
+    toast.success(
+      `Cleared ${pokemon} Pokémon ${pokemon === 1 ? "entry" : "entries"}` +
+        (items ? " + items list" : ""),
+    );
+  }
 };
 
 export const SiteFooter = () => {
@@ -51,6 +65,15 @@ export const SiteFooter = () => {
             <Clock className="h-3 w-3" />
             {formatBuildTime(BUILD_TIME)}
           </span>
+          <button
+            type="button"
+            onClick={handleClearCache}
+            className="inline-flex items-center gap-1 hover:text-destructive transition-colors"
+            title="Wipe cached PokeAPI data (items + per-Pokémon details)"
+          >
+            <Trash2 className="h-3 w-3" />
+            Clear cache
+          </button>
         </div>
       </div>
     </footer>
