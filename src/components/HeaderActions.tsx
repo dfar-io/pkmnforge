@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, BookmarkPlus, Check, MoreHorizontal, Share2, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,23 +8,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SavedTeamsMenu } from "@/components/SavedTeamsMenu";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 interface HeaderActionsProps {
   team: PokemonDetail[];
-  onLoad: (members: PokemonDetail[]) => void;
   onShare: () => void;
   onClear: () => void;
   justCopied: boolean;
 }
 
-// Inline buttons on sm+, single overflow menu on mobile. The overflow menu
-// items drive the same controlled Save dialog / Load dropdown via props on
-// SavedTeamsMenu so behavior stays identical across breakpoints.
-export const HeaderActions = ({ team, onLoad, onShare, onClear, justCopied }: HeaderActionsProps) => {
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [loadOpen, setLoadOpen] = useState(false);
+// Inline buttons on sm+, single overflow menu on mobile.
+export const HeaderActions = ({ team, onShare, onClear, justCopied }: HeaderActionsProps) => {
   const [overflowOpen, setOverflowOpen] = useState(false);
   const hasTeam = team.length > 0;
 
@@ -32,7 +26,6 @@ export const HeaderActions = ({ team, onLoad, onShare, onClear, justCopied }: He
     <>
       {/* Desktop / tablet: inline buttons */}
       <div className="hidden sm:flex items-center gap-1 flex-wrap justify-end">
-        <SavedTeamsMenu team={team} onLoad={onLoad} />
         {hasTeam && (
           <>
             <Button
@@ -76,30 +69,8 @@ export const HeaderActions = ({ team, onLoad, onShare, onClear, justCopied }: He
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem
-              disabled={!hasTeam}
-              onSelect={(e) => {
-                e.preventDefault();
-                setOverflowOpen(false);
-                setSaveOpen(true);
-              }}
-            >
-              <BookmarkPlus className="h-4 w-4 mr-2" />
-              Save team
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                setOverflowOpen(false);
-                setLoadOpen(true);
-              }}
-            >
-              <Bookmark className="h-4 w-4 mr-2" />
-              Load team
-            </DropdownMenuItem>
             {hasTeam && (
               <>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onSelect={(e) => {
                     e.preventDefault();
@@ -114,6 +85,7 @@ export const HeaderActions = ({ team, onLoad, onShare, onClear, justCopied }: He
                   )}
                   {justCopied ? "Copied" : "Share link"}
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onSelect={(e) => {
@@ -129,17 +101,6 @@ export const HeaderActions = ({ team, onLoad, onShare, onClear, justCopied }: He
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Headless controlled menu for the mobile Save/Load actions. */}
-        <SavedTeamsMenu
-          team={team}
-          onLoad={onLoad}
-          hideTriggers
-          saveOpen={saveOpen}
-          onSaveOpenChange={setSaveOpen}
-          loadOpen={loadOpen}
-          onLoadOpenChange={setLoadOpen}
-        />
       </div>
     </>
   );
