@@ -30,11 +30,6 @@ const TeamPage = () => {
 
   const excludeIds = team.map((p) => p.id);
 
-  const addSuggestion = (pokemon: PokemonDetail) => {
-    if (isFull) return;
-    setTeam((prev) => [...prev, pokemon]);
-  };
-
   return (
     <>
       <TeamGrid
@@ -51,7 +46,6 @@ const TeamPage = () => {
         <SuggestTeammate
           team={team}
           excludeIds={excludeIds}
-          onPick={addSuggestion}
           canAdd={!isFull}
         />
       </section>
