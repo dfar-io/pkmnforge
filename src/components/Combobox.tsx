@@ -19,6 +19,8 @@ interface ComboboxProps {
   disabled?: boolean;
   /** Called only after the user selects (not while typing). */
   triggerLabel?: string;
+  /** When true, the user can commit the typed query as a custom value. */
+  allowCustom?: boolean;
 }
 
 const MAX_VISIBLE = 80;
@@ -36,9 +38,17 @@ export const Combobox = ({
   emptyText = "No matches",
   disabled,
   triggerLabel,
+  allowCustom = false,
 }: ComboboxProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const commitCustom = () => {
+    const v = query.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!v) return;
+    onChange(v);
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) setQuery("");
@@ -83,11 +93,28 @@ export const Combobox = ({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search…"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && allowCustom) {
+                e.preventDefault();
+                commitCustom();
+              }
+            }}
+            placeholder={allowCustom ? "Search or type custom…" : "Search…"}
             className="h-9 pl-8 border-0 focus-visible:ring-0 rounded-none bg-transparent"
           />
         </div>
         <ul className="max-h-64 overflow-y-auto py-1">
+          {allowCustom && query.trim() && !options.some((o) => o === query.trim().toLowerCase().replace(/\s+/g, "-")) && (
+            <li>
+              <button
+                type="button"
+                onClick={commitCustom}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-secondary/60 text-primary"
+              >
+                Use “{query.trim()}”
+              </button>
+            </li>
+          )}
           {value && (
             <li>
               <button
