@@ -55,7 +55,7 @@ const Index = () => {
     } catch {
       if (navigator.share) {
         try {
-          await navigator.share({ title: "My PkmnForge team", url: link });
+          await navigator.share({ title: "My Pokénex team", url: link });
           return;
         } catch {
           /* user dismissed */
@@ -133,17 +133,17 @@ const Index = () => {
             <div className="flex items-center gap-2">
               <img
                 src={logo}
-                alt="PkmnForge logo"
+                alt="Pokénex logo"
                 width={28}
                 height={28}
                 className="h-7 w-7 shrink-0"
               />
               <h1 className="font-display text-xl font-extrabold tracking-tight">
-                Pkmn<span className="text-primary">Forge</span>
+                Poké<span className="text-primary">nex</span>
               </h1>
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Build & analyze your Pokémon squad
+              Your personal Pokémon encyclopedia
             </p>
           </div>
           <HeaderActions
