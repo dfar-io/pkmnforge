@@ -4,7 +4,6 @@ import { HeaderActions } from "@/components/HeaderActions";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { toast } from "sonner";
 import { useState } from "react";
-import { getNatureById } from "@/lib/natures";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,21 +18,20 @@ import {
 const CONFIRM_CLEAR_THRESHOLD = 4;
 
 export const AppHeader = () => {
-  const { team, setTeam, natures } = useTeamContext();
+  const { team, setTeam } = useTeamContext();
   const [justCopied, setJustCopied] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const pokemonForActions = team.map((m) => m.pokemon);
 
   const handleShare = async () => {
     if (team.length === 0) return;
     const url = new URL(window.location.origin + "/");
-    url.searchParams.set("team", team.map((p) => p.id).join(","));
-    const naturePairs = team
-      .map((p) => {
-        const n = getNatureById(natures[p.id]);
-        return n ? `${p.id}:${n.code}` : null;
-      })
-      .filter((v): v is string => v !== null);
-    if (naturePairs.length > 0) url.searchParams.set("natures", naturePairs.join(","));
+    // `?team=pokemonId:buildId,...` — buildId may be empty for default builds.
+    url.searchParams.set(
+      "team",
+      team.map((m) => `${m.pokemonId}:${m.buildId}`).join(","),
+    );
     const link = url.toString();
     try {
       await navigator.clipboard.writeText(link);
@@ -88,8 +86,18 @@ export const AppHeader = () => {
           </p>
         </Link>
         <HeaderActions
-          team={team}
-          onLoad={(members) => setTeam(members.slice(0, TEAM_SIZE))}
+          team={pokemonForActions}
+          onLoad={(members) =>
+            // Loading a saved team currently has no per-slot build info — set
+            // buildId="" so the slot renders the raw species without a build.
+            setTeam(
+              members.slice(0, TEAM_SIZE).map((p) => ({
+                pokemonId: p.id,
+                buildId: "",
+                pokemon: p,
+              })),
+            )
+          }
           onShare={handleShare}
           onClear={handleClear}
           justCopied={justCopied}
