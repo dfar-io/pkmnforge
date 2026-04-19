@@ -39,7 +39,7 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
   };
 
   const abilityOptions = pokemon.abilities.map((a) => a.name);
-  const moveOptions = pokemon.moves;
+  const moveOptions = [...pokemon.moves].sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="space-y-3 rounded-2xl border border-border bg-card/50 p-3">
