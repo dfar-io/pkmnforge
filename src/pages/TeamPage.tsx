@@ -152,7 +152,7 @@ const BuildSlot = ({ member, buildName, natureLabel, onRemove, onOpenDetail }: B
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className={cn(
-        "relative aspect-square rounded-2xl bg-gradient-card shadow-card overflow-hidden touch-none",
+        "relative aspect-[4/3] rounded-2xl bg-gradient-card shadow-card overflow-hidden touch-none",
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
