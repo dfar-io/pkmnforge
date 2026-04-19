@@ -120,6 +120,10 @@ const TeamPage = () => {
       </section>
 
       <section>
+        <OffensiveCoverage team={team} />
+      </section>
+
+      <section>
         <TeamAnalysis team={pokemonOnly} />
       </section>
     </>
