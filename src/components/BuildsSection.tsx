@@ -52,6 +52,11 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     toast.success(`Build "${b.name}" deleted`);
   };
 
+  const handleDuplicate = (b: PokemonBuild) => {
+    const copy = duplicate(b.id);
+    if (copy) toast.success(`Copied "${b.name}"`);
+  };
+
   const handleAddToTeam = (b: PokemonBuild) => {
     if (isFull) return;
     if (buildIdsInTeam.has(b.id)) return;
