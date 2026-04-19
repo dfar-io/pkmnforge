@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
+
 import { useTeam } from "@/hooks/useTeam";
 
 export const TEAM_SIZE = 6;
