@@ -253,3 +253,33 @@ export async function fetchHeldItems(): Promise<string[]> {
   return cachedItems;
 }
 
+// Wipe all PokeAPI-derived caches (in-memory + localStorage). Used by the
+// "Clear cached data" footer button.
+export function clearPokeapiCaches(): { items: number; pokemon: number } {
+  let pokemonCleared = 0;
+  let itemsCleared = 0;
+  cachedList = null;
+  detailCache.clear();
+  typeIdsCache.clear();
+  fullDetailCache.clear();
+  evoCache.clear();
+  cachedItems = null;
+  if (typeof window !== "undefined") {
+    try {
+      if (window.localStorage.getItem(ITEMS_CACHE_KEY)) {
+        window.localStorage.removeItem(ITEMS_CACHE_KEY);
+        itemsCleared = 1;
+      }
+      const toRemove: string[] = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k && k.startsWith(FULL_DETAIL_CACHE_PREFIX)) toRemove.push(k);
+      }
+      for (const k of toRemove) window.localStorage.removeItem(k);
+      pokemonCleared = toRemove.length;
+    } catch {
+      /* ignore */
+    }
+  }
+  return { items: itemsCleared, pokemon: pokemonCleared };
+}
