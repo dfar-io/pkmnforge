@@ -28,6 +28,7 @@ interface TypeSuggestion {
 const TOP_N = 4;
 
 export const SuggestTypes = ({ team }: SuggestTypesProps) => {
+  const navigate = useNavigate();
   // Top threat types: those at least one team member is weak to, weighted by
   // how many members share the weakness.
   const threats = useMemo(() => {
