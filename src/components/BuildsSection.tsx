@@ -238,6 +238,46 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
           );
         })}
       </ul>
+
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete build?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  This will permanently delete{" "}
+                  <span className="text-foreground font-medium">
+                    "{pendingDelete?.name}"
+                  </span>
+                  .
+                </p>
+                {pendingDelete && buildIdsInTeam.has(pendingDelete.id) && (
+                  <p className="flex items-start gap-2 text-warning">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>
+                      This build is currently in your team. Removing it will also
+                      remove {formatName(pokemon.name)} from your team.
+                    </span>
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => pendingDelete && handleDelete(pendingDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete build
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 };
