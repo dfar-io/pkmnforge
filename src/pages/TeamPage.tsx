@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { Plus, X, GripVertical } from "lucide-react";
 import { TypeIcon } from "@/components/TypeBadge";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
+import { OffensiveCoverage } from "@/components/OffensiveCoverage";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
