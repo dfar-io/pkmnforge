@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Sword } from "lucide-react";
 import {
   POKEMON_TYPES,
@@ -35,6 +36,7 @@ interface CoverageRow {
 const DEFENDERS = POKEMON_TYPES;
 
 export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
+  const navigate = useNavigate();
   const { getById } = useBuilds();
   const [resolved, setResolved] = useState<Map<string, PokemonType | null>>(
     new Map(),
@@ -255,14 +257,19 @@ export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
               <ul className="space-y-1.5">
                 {suggestions.map((s) => (
                   <li key={s.type} className="flex items-center gap-2 text-[11px]">
-                    <span
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate("/pokedex", { state: { initialTypes: [s.type] } })
+                      }
                       className={cn(
-                        "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground shrink-0",
+                        "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground shrink-0 transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         `bg-type-${s.type}`,
                       )}
+                      aria-label={`Browse ${TYPE_LABEL[s.type]} type Pokémon`}
                     >
                       {TYPE_LABEL[s.type]}
-                    </span>
+                    </button>
                     <span className="text-muted-foreground">
                       covers{" "}
                       <span className="text-foreground font-semibold">
