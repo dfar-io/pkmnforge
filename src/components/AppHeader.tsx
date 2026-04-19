@@ -87,17 +87,6 @@ export const AppHeader = () => {
         </Link>
         <HeaderActions
           team={pokemonForActions}
-          onLoad={(members) =>
-            // Loading a saved team currently has no per-slot build info — set
-            // buildId="" so the slot renders the raw species without a build.
-            setTeam(
-              members.slice(0, TEAM_SIZE).map((p) => ({
-                pokemonId: p.id,
-                buildId: "",
-                pokemon: p,
-              })),
-            )
-          }
           onShare={handleShare}
           onClear={handleClear}
           justCopied={justCopied}
