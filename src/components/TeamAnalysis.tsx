@@ -116,7 +116,7 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
 
       <div className="rounded-2xl bg-card shadow-card p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display font-bold text-base">Type Coverage</h2>
+          <h2 className="font-display font-bold text-base">Defensive Coverage</h2>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
             {team.length} / 6 picked
           </p>
