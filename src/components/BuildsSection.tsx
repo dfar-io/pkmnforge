@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Sparkles, Trash2, Check } from "lucide-react";
+import { Copy, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BuildEditor } from "@/components/BuildEditor";
 import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
@@ -20,6 +30,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const builds = getForPokemon(pokemon.id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
   const isFull = team.length >= TEAM_SIZE;
 
   const slim = {
@@ -50,6 +61,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     setTeam((prev) => prev.filter((m) => m.buildId !== b.id));
     remove(b.id);
     toast.success(`Build "${b.name}" deleted`);
+    setPendingDelete(null);
   };
 
   const handleDuplicate = (b: PokemonBuild) => {
@@ -168,7 +180,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => handleDelete(b)}
+                    onClick={() => setPendingDelete(b)}
                     aria-label="Delete build"
                     className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   >
@@ -226,6 +238,46 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
           );
         })}
       </ul>
+
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete build?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  This will permanently delete{" "}
+                  <span className="text-foreground font-medium">
+                    "{pendingDelete?.name}"
+                  </span>
+                  .
+                </p>
+                {pendingDelete && buildIdsInTeam.has(pendingDelete.id) && (
+                  <p className="flex items-start gap-2 text-warning">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>
+                      This build is currently in your team. Removing it will also
+                      remove {formatName(pokemon.name)} from your team.
+                    </span>
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => pendingDelete && handleDelete(pendingDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete build
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   );
 };
