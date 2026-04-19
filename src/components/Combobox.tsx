@@ -45,8 +45,14 @@ export const Combobox = ({
   }, [open]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = q ? options.filter((o) => o.includes(q)) : options;
+    const q = query.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!q) return options.slice(0, MAX_VISIBLE);
+    // Match against both the raw name ("thunder-punch") and a space form
+    // ("thunder punch") so users can type either way.
+    const list = options.filter((o) => {
+      const raw = o.toLowerCase();
+      return raw.includes(q) || raw.replace(/-/g, " ").includes(q.replace(/-/g, " "));
+    });
     return list.slice(0, MAX_VISIBLE);
   }, [options, query]);
 
