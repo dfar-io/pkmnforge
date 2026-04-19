@@ -5,10 +5,23 @@ import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { toast } from "sonner";
 import { useState } from "react";
 import { getNatureById } from "@/lib/natures";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const CONFIRM_CLEAR_THRESHOLD = 4;
 
 export const AppHeader = () => {
   const { team, setTeam, natures } = useTeamContext();
   const [justCopied, setJustCopied] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleShare = async () => {
     if (team.length === 0) return;
@@ -40,10 +53,18 @@ export const AppHeader = () => {
     }
   };
 
-  const handleClear = () => {
-    if (team.length === 0) return;
+  const performClear = () => {
     setTeam([]);
     toast.success("Team cleared");
+  };
+
+  const handleClear = () => {
+    if (team.length === 0) return;
+    if (team.length >= CONFIRM_CLEAR_THRESHOLD) {
+      setConfirmOpen(true);
+      return;
+    }
+    performClear();
   };
 
   return (
