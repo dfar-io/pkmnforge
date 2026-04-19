@@ -76,9 +76,57 @@ export interface PokemonFullDetail extends PokemonDetail {
   speciesUrl: string;
 }
 
+// Per-Pokémon full detail (moves, abilities, stats). Cached in localStorage
+// so the build editor opens instantly on revisit instead of re-fetching the
+// ~50–200 KB payload from PokeAPI each time.
+const FULL_DETAIL_CACHE_PREFIX = "pokenex.fullDetail.v1.";
+const FULL_DETAIL_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+interface FullDetailCacheEntry {
+  ts: number;
+  detail: PokemonFullDetail;
+}
+
+const readFullDetailCache = (id: number): PokemonFullDetail | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(FULL_DETAIL_CACHE_PREFIX + id);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as FullDetailCacheEntry;
+    if (
+      !parsed ||
+      typeof parsed.ts !== "number" ||
+      Date.now() - parsed.ts > FULL_DETAIL_TTL_MS ||
+      !parsed.detail
+    ) {
+      return null;
+    }
+    return parsed.detail;
+  } catch {
+    return null;
+  }
+};
+
+const writeFullDetailCache = (id: number, detail: PokemonFullDetail) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      FULL_DETAIL_CACHE_PREFIX + id,
+      JSON.stringify({ ts: Date.now(), detail } satisfies FullDetailCacheEntry),
+    );
+  } catch {
+    /* ignore quota */
+  }
+};
+
 const fullDetailCache = new Map<number, PokemonFullDetail>();
 export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDetail> {
   if (fullDetailCache.has(id)) return fullDetailCache.get(id)!;
+  const stored = readFullDetailCache(id);
+  if (stored) {
+    fullDetailCache.set(id, stored);
+    return stored;
+  }
   const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
   const data = await res.json();
   const detail: PokemonFullDetail = {
@@ -103,6 +151,7 @@ export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDet
     speciesUrl: data.species?.url ?? "",
   };
   fullDetailCache.set(id, detail);
+  writeFullDetailCache(id, detail);
   return detail;
 }
 
