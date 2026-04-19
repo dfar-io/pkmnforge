@@ -153,10 +153,29 @@ export const useBuilds = () => {
     setBuilds((prev) => prev.filter((b) => b.id !== id));
   }, []);
 
+  const duplicate = useCallback((id: string): PokemonBuild | null => {
+    let created: PokemonBuild | null = null;
+    setBuilds((prev) => {
+      const src = prev.find((b) => b.id === id);
+      if (!src) return prev;
+      const now = Date.now();
+      created = {
+        ...src,
+        id: genId(),
+        name: `${src.name} (copy)`.slice(0, BUILD_NAME_MAX),
+        moves: [...src.moves] as [string, string, string, string],
+        createdAt: now,
+        updatedAt: now,
+      };
+      return [created, ...prev];
+    });
+    return created;
+  }, []);
+
   /** Replace all builds wholesale (used by import/restore). */
   const replaceAll = useCallback((next: PokemonBuild[]) => {
     setBuilds(next);
   }, []);
 
-  return { builds, getForPokemon, getById, create, update, remove, replaceAll };
+  return { builds, getForPokemon, getById, create, update, remove, duplicate, replaceAll };
 };
