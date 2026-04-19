@@ -99,9 +99,7 @@ export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDet
       name: s.stat.name,
       base: s.base_stat,
     })),
-    moves: data.moves
-      .slice(0, 80)
-      .map((m: { move: { name: string } }) => m.move.name),
+    moves: data.moves.map((m: { move: { name: string } }) => m.move.name),
     speciesUrl: data.species?.url ?? "",
   };
   fullDetailCache.set(id, detail);
@@ -146,3 +144,17 @@ export function formatName(name: string): string {
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join(" ");
 }
+
+// Held items list. Held items in PokeAPI are part of the broader items list,
+// but the most common competitive items live in specific categories. We pull
+// a generous slice and let the user search by name.
+let cachedItems: string[] | null = null;
+export async function fetchHeldItems(): Promise<string[]> {
+  if (cachedItems) return cachedItems;
+  // PokeAPI has ~2150 items total; one page is fine.
+  const res = await fetch("https://pokeapi.co/api/v2/item?limit=2200&offset=0");
+  const data = await res.json();
+  cachedItems = (data.results as { name: string }[]).map((i) => i.name);
+  return cachedItems;
+}
+

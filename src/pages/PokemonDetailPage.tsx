@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, Check, Star, ExternalLink } from "lucide-react";
+import { ArrowLeft, Loader2, Star, ExternalLink } from "lucide-react";
 import {
   fetchEvolutionChain,
   fetchPokemonFullDetail,
@@ -10,8 +10,8 @@ import {
 } from "@/lib/pokeapi";
 import { TypeIcon } from "@/components/TypeBadge";
 import { Button } from "@/components/ui/button";
-import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useFavorites } from "@/hooks/useFavorites";
+import { BuildsSection } from "@/components/BuildsSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -31,10 +31,7 @@ const PokemonDetailPage = () => {
   const [detail, setDetail] = useState<PokemonFullDetail | null>(null);
   const [evo, setEvo] = useState<EvolutionNode | null>(null);
   const [loading, setLoading] = useState(true);
-  const { team, setTeam } = useTeamContext();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const inTeam = team.some((p) => p.id === numId);
-  const isFull = team.length >= TEAM_SIZE;
   const fav = isFavorite(numId);
 
   useEffect(() => {
@@ -65,16 +62,6 @@ const PokemonDetailPage = () => {
       cancelled = true;
     };
   }, [numId, navigate]);
-
-  const handleAdd = () => {
-    if (!detail || inTeam || isFull) return;
-    setTeam((prev) =>
-      prev.length >= TEAM_SIZE
-        ? prev
-        : [...prev, { id: detail.id, name: detail.name, types: detail.types, sprite: detail.sprite }],
-    );
-    toast.success(`${formatName(detail.name)} added to team`);
-  };
 
   if (loading || !detail) {
     return (
@@ -135,24 +122,7 @@ const PokemonDetailPage = () => {
         </div>
       </div>
 
-      <Button
-        onClick={handleAdd}
-        disabled={inTeam || isFull}
-        className="w-full"
-        variant={inTeam ? "secondary" : "default"}
-      >
-        {inTeam ? (
-          <>
-            <Check className="h-4 w-4 mr-1.5" /> In your team
-          </>
-        ) : isFull ? (
-          "Team is full"
-        ) : (
-          <>
-            <Plus className="h-4 w-4 mr-1.5" /> Add to team
-          </>
-        )}
-      </Button>
+      <BuildsSection pokemon={detail} />
 
       <section>
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground mb-2">
@@ -213,22 +183,6 @@ const PokemonDetailPage = () => {
         </section>
       )}
 
-      <section>
-        <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground mb-2">
-          Moves <span className="opacity-60">(first {detail.moves.length})</span>
-        </h2>
-        <ul className="flex flex-wrap gap-1.5">
-          {detail.moves.map((m) => (
-            <li
-              key={m}
-              className="rounded-full bg-secondary/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
-            >
-              {formatName(m)}
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <a
         href={`https://www.smogon.com/dex/sv/pokemon/${encodeURIComponent(detail.name.toLowerCase())}/`}
         target="_blank"
@@ -246,7 +200,6 @@ const PokemonDetailPage = () => {
 };
 
 const EvolutionRow = ({ node }: { node: EvolutionNode }) => {
-  // Flatten all stages into rows: [stage1, stage2, ...]; siblings rendered side by side.
   const stages: EvolutionNode[][] = [];
   let current: EvolutionNode[] = [node];
   while (current.length) {
