@@ -68,7 +68,6 @@ const TeamPage = () => {
 
   const sortableIds = team.map((m) => `slot-${m.pokemonId}-${m.buildId}`);
   const pokemonOnly = team.map((m) => m.pokemon);
-  const excludeIds = team.map((m) => m.pokemonId);
 
   return (
     <>
