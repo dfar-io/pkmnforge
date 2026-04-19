@@ -93,11 +93,28 @@ export const Combobox = ({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search…"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && allowCustom) {
+                e.preventDefault();
+                commitCustom();
+              }
+            }}
+            placeholder={allowCustom ? "Search or type custom…" : "Search…"}
             className="h-9 pl-8 border-0 focus-visible:ring-0 rounded-none bg-transparent"
           />
         </div>
         <ul className="max-h-64 overflow-y-auto py-1">
+          {allowCustom && query.trim() && !options.some((o) => o === query.trim().toLowerCase().replace(/\s+/g, "-")) && (
+            <li>
+              <button
+                type="button"
+                onClick={commitCustom}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-secondary/60 text-primary"
+              >
+                Use “{query.trim()}”
+              </button>
+            </li>
+          )}
           {value && (
             <li>
               <button
