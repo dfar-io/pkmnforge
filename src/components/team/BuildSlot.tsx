@@ -3,12 +3,14 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { GripVertical, X } from "lucide-react";
 import { TypeBadge } from "@/components/TypeBadge";
+import { BuildDetailsPopover } from "@/components/team/BuildDetailsPopover";
 import { formatName } from "@/lib/pokeapi";
-import type { TeamMember } from "@/lib/builds";
+import type { PokemonBuild, TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
 
 interface BuildSlotProps {
   member: TeamMember;
+  build: PokemonBuild | undefined;
   buildName: string;
   onRemove: () => void;
   onOpenDetail: () => void;
@@ -18,7 +20,7 @@ interface BuildSlotProps {
  * Sortable team-slot tile. The full surface is a drag handle that opens the
  * Pokémon detail on click; the corner X removes the member.
  */
-export const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSlotProps) => {
+export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: BuildSlotProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: `slot-${member.pokemonId}-${member.buildId}` });
 
@@ -39,6 +41,8 @@ export const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSl
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
+      <BuildDetailsPopover build={build} pokemonName={member.pokemon.name} />
+
       <button
         onClick={onRemove}
         className="absolute top-1 right-1 z-20 grid h-6 w-6 place-items-center rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
