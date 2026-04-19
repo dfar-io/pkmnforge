@@ -2,7 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { GripVertical, X } from "lucide-react";
-import { TypeIcon } from "@/components/TypeBadge";
+import { TypeBadge } from "@/components/TypeBadge";
 import { formatName } from "@/lib/pokeapi";
 import type { TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ export const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSl
         </p>
         <div className="flex items-center justify-center gap-1 mt-1">
           {member.pokemon.types.map((t) => (
-            <TypeIcon key={t} type={t} />
+            <TypeBadge key={t} type={t} size="sm" />
           ))}
         </div>
       </div>
