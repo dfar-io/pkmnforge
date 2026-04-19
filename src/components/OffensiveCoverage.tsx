@@ -91,20 +91,48 @@ export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
 
   const rows = useMemo<CoverageRow[]>(() => {
     return DEFENDERS.map((defender) => {
-      let best = 1; // neutral by default
+      let best = 0;
+      let any = false;
       const hitters: TeamMember[] = [];
       for (const ma of memberAttacks) {
-        let memberBest = 0;
+        let memberBest = -1;
         for (const atk of ma.attackTypes) {
+          any = true;
           const mult = getMultiplier(atk, [defender]);
           if (mult > memberBest) memberBest = mult;
         }
         if (memberBest > best) best = memberBest;
         if (classify(memberBest) === "weak") hitters.push(ma.member);
       }
-      return { defender, bestMultiplier: best, hittersSE: hitters };
+      return { defender, bestMultiplier: any ? best : 1, hittersSE: hitters };
     });
   }, [memberAttacks]);
+
+  // Suggest attacking types that would close the most gaps, excluding types
+  // the team already has in its move pool.
+  const ownedTypes = useMemo(() => {
+    const s = new Set<PokemonType>();
+    for (const ma of memberAttacks) for (const t of ma.attackTypes) s.add(t);
+    return s;
+  }, [memberAttacks]);
+
+  const suggestions = useMemo(() => {
+    const gaps = DEFENDERS.filter((d) => {
+      const row = rows.find((r) => r.defender === d);
+      if (!row) return false;
+      const eff = classify(row.bestMultiplier);
+      return eff === "resist" || eff === "immune";
+    });
+    if (gaps.length === 0) return [] as { type: PokemonType; covers: PokemonType[] }[];
+    const scored = POKEMON_TYPES.filter((t) => !ownedTypes.has(t)).map((atk) => {
+      const covers = gaps.filter((g) => getMultiplier(atk, [g]) > 1);
+      return { type: atk, covers };
+    });
+    return scored
+      .filter((s) => s.covers.length > 0)
+      .sort((a, b) => b.covers.length - a.covers.length)
+      .slice(0, 3);
+  }, [rows, ownedTypes]);
 
   const totalMoves = moveNames.length;
   const resolvedCount = moveNames.filter((n) => resolved.has(n)).length;
@@ -211,13 +239,42 @@ export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
       </ul>
 
       {uncovered.length > 0 && (
-        <p className="mt-3 pt-3 border-t border-border text-[10px] text-muted-foreground">
-          Gaps: no team move hits{" "}
-          <span className="font-display font-bold text-destructive">
-            {uncovered.map((u) => TYPE_LABEL[u.defender]).join(", ")}
-          </span>{" "}
-          for neutral or better damage.
-        </p>
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
+          <p className="text-[10px] text-muted-foreground">
+            Gaps: no team move hits{" "}
+            <span className="font-display font-bold text-destructive">
+              {uncovered.map((u) => TYPE_LABEL[u.defender]).join(", ")}
+            </span>{" "}
+            for neutral or better damage.
+          </p>
+          {suggestions.length > 0 && (
+            <div className="rounded-lg bg-primary/10 border border-primary/30 p-2.5">
+              <p className="text-[10px] uppercase tracking-wider text-primary font-display font-bold mb-1.5">
+                Suggested coverage moves
+              </p>
+              <ul className="space-y-1.5">
+                {suggestions.map((s) => (
+                  <li key={s.type} className="flex items-center gap-2 text-[11px]">
+                    <span
+                      className={cn(
+                        "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground shrink-0",
+                        `bg-type-${s.type}`,
+                      )}
+                    >
+                      {TYPE_LABEL[s.type]}
+                    </span>
+                    <span className="text-muted-foreground">
+                      covers{" "}
+                      <span className="text-foreground font-semibold">
+                        {s.covers.map((c) => TYPE_LABEL[c]).join(", ")}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
