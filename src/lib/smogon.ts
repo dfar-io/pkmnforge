@@ -33,21 +33,21 @@ export function getSmogonTier(pokemonId: number): SmogonTier | null {
  * via index.css custom utility classes (defined alongside type colors).
  */
 export const TIER_BADGE_CLASS: Record<SmogonTier, string> = {
-  AG: "bg-tier-ag text-tier-ag-foreground",
-  Uber: "bg-tier-uber text-tier-uber-foreground",
-  OU: "bg-tier-ou text-tier-ou-foreground",
-  UUBL: "bg-tier-uubl text-tier-uubl-foreground",
-  UU: "bg-tier-uu text-tier-uu-foreground",
-  RUBL: "bg-tier-rubl text-tier-rubl-foreground",
-  RU: "bg-tier-ru text-tier-ru-foreground",
-  NUBL: "bg-tier-nubl text-tier-nubl-foreground",
-  NU: "bg-tier-nu text-tier-nu-foreground",
-  PUBL: "bg-tier-publ text-tier-publ-foreground",
-  PU: "bg-tier-pu text-tier-pu-foreground",
-  ZUBL: "bg-tier-zubl text-tier-zubl-foreground",
-  ZU: "bg-tier-zu text-tier-zu-foreground",
-  NFE: "bg-tier-nfe text-tier-nfe-foreground",
-  LC: "bg-tier-lc text-tier-lc-foreground",
+  AG: "bg-tier-ag",
+  Uber: "bg-tier-uber",
+  OU: "bg-tier-ou",
+  UUBL: "bg-tier-uubl",
+  UU: "bg-tier-uu",
+  RUBL: "bg-tier-rubl",
+  RU: "bg-tier-ru",
+  NUBL: "bg-tier-nubl",
+  NU: "bg-tier-nu",
+  PUBL: "bg-tier-publ",
+  PU: "bg-tier-pu",
+  ZUBL: "bg-tier-zubl",
+  ZU: "bg-tier-zu",
+  NFE: "bg-tier-nfe",
+  LC: "bg-tier-lc",
 };
 
 export const TIER_LABEL: Record<SmogonTier, string> = {
