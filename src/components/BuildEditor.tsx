@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Save, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -105,14 +105,41 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
           Moves
         </Label>
         {[0, 1, 2, 3].map((i) => (
-          <Combobox
-            key={i}
-            value={draft.moves[i]}
-            onChange={(v) => setMove(i as 0 | 1 | 2 | 3, v)}
-            options={moveOptions}
-            placeholder={`Move ${i + 1}`}
-            allowCustom
-          />
+          <div key={i} className="flex items-center gap-1">
+            <div className="flex-1 min-w-0">
+              <Combobox
+                value={draft.moves[i]}
+                onChange={(v) => setMove(i as 0 | 1 | 2 | 3, v)}
+                options={moveOptions}
+                placeholder={`Move ${i + 1}`}
+                allowCustom
+              />
+            </div>
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-4 w-6"
+                onClick={() => swapMoves(i, i - 1)}
+                disabled={i === 0}
+                aria-label={`Move ${i + 1} up`}
+              >
+                <ArrowUp className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-4 w-6"
+                onClick={() => swapMoves(i, i + 1)}
+                disabled={i === 3}
+                aria-label={`Move ${i + 1} down`}
+              >
+                <ArrowDown className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 
