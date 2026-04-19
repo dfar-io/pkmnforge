@@ -147,5 +147,13 @@ export const useSavedTeams = () => {
     [teams, persist],
   );
 
-  return { teams, saveNew, overwrite, rename, remove };
+  /** Replace all saved teams wholesale (used by import/restore). */
+  const replaceAll = useCallback(
+    (next: SavedTeam[]) => {
+      persist(next.slice(0, MAX_TEAMS));
+    },
+    [persist],
+  );
+
+  return { teams, saveNew, overwrite, rename, remove, replaceAll };
 };

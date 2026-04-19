@@ -153,5 +153,10 @@ export const useBuilds = () => {
     setBuilds((prev) => prev.filter((b) => b.id !== id));
   }, []);
 
-  return { builds, getForPokemon, getById, create, update, remove };
+  /** Replace all builds wholesale (used by import/restore). */
+  const replaceAll = useCallback((next: PokemonBuild[]) => {
+    setBuilds(next);
+  }, []);
+
+  return { builds, getForPokemon, getById, create, update, remove, replaceAll };
 };
