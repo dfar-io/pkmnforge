@@ -19,6 +19,8 @@ interface ComboboxProps {
   disabled?: boolean;
   /** Called only after the user selects (not while typing). */
   triggerLabel?: string;
+  /** When true, the user can commit the typed query as a custom value. */
+  allowCustom?: boolean;
 }
 
 const MAX_VISIBLE = 80;
