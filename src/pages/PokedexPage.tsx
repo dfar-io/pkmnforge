@@ -11,6 +11,7 @@ import {
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
 import { TypeIcon } from "@/components/TypeBadge";
 import { SmogonTierBadge } from "@/components/SmogonTierBadge";
+import { getSmogonTierRank } from "@/lib/smogon";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
