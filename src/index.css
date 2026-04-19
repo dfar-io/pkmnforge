@@ -65,6 +65,24 @@
     --type-steel: 220 15% 60%;
     --type-fairy: 330 70% 75%;
 
+    /* Smogon tier colors — single source of truth */
+    --tier-ag: 320 80% 50%;       /* Anything Goes — magenta */
+    --tier-uber: 280 70% 55%;     /* Ubers — purple */
+    --tier-ou: 0 75% 55%;         /* OU — bold red */
+    --tier-uubl: 18 85% 55%;      /* UUBL — red-orange */
+    --tier-uu: 28 90% 55%;        /* UU — orange */
+    --tier-rubl: 38 90% 50%;      /* RUBL — amber */
+    --tier-ru: 45 95% 52%;        /* RU — gold */
+    --tier-nubl: 75 55% 45%;      /* NUBL — olive */
+    --tier-nu: 110 45% 45%;       /* NU — green */
+    --tier-publ: 165 50% 42%;     /* PUBL — teal-green */
+    --tier-pu: 185 55% 45%;       /* PU — teal */
+    --tier-zubl: 205 60% 50%;     /* ZUBL — sky-blue */
+    --tier-zu: 220 55% 55%;       /* ZU — blue */
+    --tier-nfe: 220 12% 45%;      /* NFE — neutral gray */
+    --tier-lc: 145 35% 50%;       /* LC — soft green */
+    --tier-foreground: 0 0% 100%; /* white text on all tier badges */
+
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(48 100% 58%) 0%, hsl(32 100% 58%) 100%);
     --gradient-card: linear-gradient(160deg, hsl(224 28% 14%) 0%, hsl(224 32% 10%) 100%);

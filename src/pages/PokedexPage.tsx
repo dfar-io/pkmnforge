@@ -10,6 +10,7 @@ import {
 } from "@/lib/pokeapi";
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
 import { TypeIcon } from "@/components/TypeBadge";
+import { SmogonTierBadge } from "@/components/SmogonTierBadge";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
@@ -289,9 +290,12 @@ const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, onToggleFav }: 
             <p className="text-[10px] text-muted-foreground font-mono">
               #{String(id).padStart(4, "0")}
             </p>
-            <p className="text-sm font-display font-semibold truncate">
-              {formatName(name)}
-            </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <p className="text-sm font-display font-semibold truncate">
+                {formatName(name)}
+              </p>
+              <SmogonTierBadge pokemonId={id} />
+            </div>
             <RowTypes types={types} />
           </div>
         </div>
