@@ -166,7 +166,7 @@ const PokemonDetailPage = () => {
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground mb-2">
           Type matchups
         </h2>
-        <TypeMatchups types={detail.types} />
+        <TypeMatchups types={detail.types} abilities={detail.abilities.map((a) => a.name)} />
       </section>
 
       <section>
