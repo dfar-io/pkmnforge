@@ -38,6 +38,14 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
     });
   };
 
+  const swapMoves = (a: number, b: number) => {
+    setDraft((d) => {
+      const moves = [...d.moves] as [string, string, string, string];
+      [moves[a], moves[b]] = [moves[b], moves[a]];
+      return { ...d, moves };
+    });
+  };
+
   const abilityOptions = pokemon.abilities.map((a) => a.name);
   const moveOptions = [...pokemon.moves].sort((a, b) => a.localeCompare(b));
 
