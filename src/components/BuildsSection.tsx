@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
+import { Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
+import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const builds = getForPokemon(pokemon.id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
   const isFull = team.length >= TEAM_SIZE;
 
@@ -87,12 +89,24 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
           Builds <span className="opacity-60">({builds.length})</span>
         </h2>
         {!creating && !editingId && (
-          <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            New build
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
+              <Download className="h-4 w-4 mr-1" />
+              Import
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4 mr-1" />
+              New build
+            </Button>
+          </div>
         )}
       </div>
+
+      <ImportShowdownDialog
+        pokemon={pokemon}
+        open={importing}
+        onOpenChange={setImporting}
+      />
 
       {creating && (
         <BuildEditor
