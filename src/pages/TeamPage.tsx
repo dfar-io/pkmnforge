@@ -75,7 +75,7 @@ const TeamPage = () => {
         <h2 className="sr-only">Your Team</h2>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5">
               {Array.from({ length: TEAM_SIZE }).map((_, i) => {
                 const member = team[i];
                 const isNextEmpty = !member && i === team.length;
