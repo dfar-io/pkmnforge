@@ -128,12 +128,11 @@ const TeamPage = () => {
 interface BuildSlotProps {
   member: TeamMember;
   buildName: string;
-  natureLabel?: string;
   onRemove: () => void;
   onOpenDetail: () => void;
 }
 
-const BuildSlot = ({ member, buildName, natureLabel, onRemove, onOpenDetail }: BuildSlotProps) => {
+const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSlotProps) => {
   const sortable = useSortable({
     id: `slot-${member.pokemonId}-${member.buildId}`,
   });
