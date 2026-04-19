@@ -115,7 +115,7 @@ const SettingsPage = () => {
 
         <div className="rounded-2xl bg-gradient-card shadow-card p-4 space-y-4">
           <h3 className="font-display text-lg font-bold">Your data</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Stat
               icon={<Package className="h-4 w-4" />}
               label="Builds"
@@ -126,6 +126,11 @@ const SettingsPage = () => {
               label="Saved teams"
               value={teams.length}
             />
+            <Stat
+              icon={<Star className="h-4 w-4" />}
+              label="Favorites"
+              value={favorites.length}
+            />
           </div>
         </div>
 
@@ -133,8 +138,8 @@ const SettingsPage = () => {
           <div>
             <h3 className="font-display text-lg font-bold">Export</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Downloads a JSON file containing every build and saved team.
-              Favorites and the active team aren't included.
+              Downloads a JSON file containing every build, saved team, and
+              favorited Pokémon. The active team isn't included.
             </p>
           </div>
           <Button onClick={handleExport} className="w-full" variant="default">
@@ -181,22 +186,28 @@ const SettingsPage = () => {
                   contains{" "}
                   <span className="text-foreground font-medium">
                     {pending?.parsed.builds.length} builds
-                  </span>{" "}
-                  and{" "}
+                  </span>
+                  ,{" "}
                   <span className="text-foreground font-medium">
                     {pending?.parsed.savedTeams.length} saved teams
+                  </span>
+                  , and{" "}
+                  <span className="text-foreground font-medium">
+                    {pending?.parsed.favorites.length} favorites
                   </span>
                   .
                 </p>
                 {pending &&
                   pending.parsed.skipped.builds +
-                    pending.parsed.skipped.savedTeams >
+                    pending.parsed.skipped.savedTeams +
+                    pending.parsed.skipped.favorites >
                     0 && (
                     <p className="flex items-start gap-2 text-warning">
                       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>
                         {pending.parsed.skipped.builds +
-                          pending.parsed.skipped.savedTeams}{" "}
+                          pending.parsed.skipped.savedTeams +
+                          pending.parsed.skipped.favorites}{" "}
                         invalid item(s) will be skipped.
                       </span>
                     </p>
