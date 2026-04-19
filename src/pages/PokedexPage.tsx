@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, X, Loader2, Star, Plus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +28,9 @@ const PokedexPage = () => {
   const [matchMode, setMatchMode] = useState<"any" | "all">("any");
   const [adding, setAdding] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const { team, setTeam } = useTeamContext();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -38,6 +41,19 @@ const PokedexPage = () => {
     fetchPokemonList().then(setList).catch(console.error);
     document.title = "Pokédex – Pokénex";
   }, []);
+
+  // When arriving from an empty team slot, jump to top and focus search.
+  useEffect(() => {
+    const state = location.state as { focusSearch?: boolean } | null;
+    if (!state?.focusSearch) return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    const id = window.setTimeout(() => {
+      searchInputRef.current?.focus({ preventScroll: true });
+      searchInputRef.current?.select();
+    }, 50);
+    navigate(location.pathname, { replace: true, state: {} });
+    return () => window.clearTimeout(id);
+  }, [location, navigate]);
 
   useEffect(() => {
     const missing = activeTypes.filter((t) => !typeIdsMap[t]);
@@ -124,6 +140,7 @@ const PokedexPage = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
+          ref={searchInputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by name or #dex..."
