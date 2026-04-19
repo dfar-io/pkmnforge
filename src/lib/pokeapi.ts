@@ -145,18 +145,62 @@ export function formatName(name: string): string {
     .join(" ");
 }
 
-// Held items only. PokeAPI tags items that a Pokémon can actually hold with
-// the `holdable` item-attribute, which gives us the competitively relevant
-// subset (berries, choice items, plates, etc.) instead of all ~2150 items
-// (TMs, key items, mail, …).
+// Full PokeAPI item list. Cached in localStorage so we only hit the network
+// once per device per cache window (the catalog rarely changes).
+const ITEMS_CACHE_KEY = "pokenex.items.v1";
+const ITEMS_CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+interface ItemsCache {
+  ts: number;
+  names: string[];
+}
+
+const readItemsCache = (): string[] | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(ITEMS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ItemsCache;
+    if (
+      !parsed ||
+      typeof parsed.ts !== "number" ||
+      !Array.isArray(parsed.names) ||
+      Date.now() - parsed.ts > ITEMS_CACHE_TTL_MS
+    ) {
+      return null;
+    }
+    return parsed.names;
+  } catch {
+    return null;
+  }
+};
+
+const writeItemsCache = (names: string[]) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      ITEMS_CACHE_KEY,
+      JSON.stringify({ ts: Date.now(), names } satisfies ItemsCache),
+    );
+  } catch {
+    /* ignore quota */
+  }
+};
+
 let cachedItems: string[] | null = null;
 export async function fetchHeldItems(): Promise<string[]> {
   if (cachedItems) return cachedItems;
-  const res = await fetch("https://pokeapi.co/api/v2/item-attribute/holdable");
+  const stored = readItemsCache();
+  if (stored) {
+    cachedItems = stored;
+    return cachedItems;
+  }
+  const res = await fetch("https://pokeapi.co/api/v2/item?limit=2200&offset=0");
   const data = await res.json();
-  const names = (data.items as { name: string }[]).map((i) => i.name);
+  const names = (data.results as { name: string }[]).map((i) => i.name);
   names.sort((a, b) => a.localeCompare(b));
   cachedItems = names;
+  writeItemsCache(names);
   return cachedItems;
 }
 
