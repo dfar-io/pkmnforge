@@ -7,12 +7,9 @@ import { TeamSlotSheet } from "@/components/TeamSlotSheet";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
-const CONFIRM_CLEAR_THRESHOLD = 4;
-
 const TeamPage = () => {
   const { team, setTeam, natures, setNature } = useTeamContext();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
   const [detailSlot, setDetailSlot] = useState<number | null>(null);
 
   const isFull = team.length >= TEAM_SIZE;
@@ -21,6 +18,10 @@ const TeamPage = () => {
     if (isFull) return;
     setPickerOpen(true);
   };
+
+  useEffect(() => {
+    document.title = "Team Builder – Pokénex";
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -52,17 +53,6 @@ const TeamPage = () => {
   const handleRemove = (slot: number) => {
     setTeam((prev) => prev.filter((_, i) => i !== slot));
   };
-
-  const performClear = () => {
-    setTeam([]);
-    toast.success("Team cleared");
-  };
-
-  useEffect(() => {
-    if (team.length >= CONFIRM_CLEAR_THRESHOLD) {
-      // Logic for handling large team clear confirmation
-    }
-  }, [team.length]);
 
   const excludeIds = team.map((p) => p.id);
 
@@ -121,26 +111,6 @@ const TeamPage = () => {
           setNature(member.id, natureId);
         }}
       />
-
-      <AlertDialog open={confirmClearOpen} onOpenChange={setConfirmClearOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear your team?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will remove all {team.length} Pokémon from your current team. Saved teams aren't affected.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={performClear}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Clear team
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };
