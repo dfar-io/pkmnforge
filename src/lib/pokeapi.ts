@@ -62,6 +62,84 @@ export async function fetchPokemonIdsByType(type: PokemonType): Promise<Set<numb
   return ids;
 }
 
+export interface PokemonStat {
+  name: string;
+  base: number;
+}
+
+export interface PokemonFullDetail extends PokemonDetail {
+  height: number; // decimetres
+  weight: number; // hectograms
+  abilities: { name: string; isHidden: boolean }[];
+  stats: PokemonStat[];
+  moves: string[];
+  speciesUrl: string;
+}
+
+const fullDetailCache = new Map<number, PokemonFullDetail>();
+export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDetail> {
+  if (fullDetailCache.has(id)) return fullDetailCache.get(id)!;
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+  const data = await res.json();
+  const detail: PokemonFullDetail = {
+    id: data.id,
+    name: data.name,
+    types: data.types.map((t: { type: { name: PokemonType } }) => t.type.name),
+    sprite:
+      data.sprites?.other?.["official-artwork"]?.front_default ??
+      data.sprites?.front_default ??
+      "",
+    height: data.height,
+    weight: data.weight,
+    abilities: data.abilities.map((a: { ability: { name: string }; is_hidden: boolean }) => ({
+      name: a.ability.name,
+      isHidden: a.is_hidden,
+    })),
+    stats: data.stats.map((s: { stat: { name: string }; base_stat: number }) => ({
+      name: s.stat.name,
+      base: s.base_stat,
+    })),
+    moves: data.moves
+      .slice(0, 80)
+      .map((m: { move: { name: string } }) => m.move.name),
+    speciesUrl: data.species?.url ?? "",
+  };
+  fullDetailCache.set(id, detail);
+  return detail;
+}
+
+export interface EvolutionNode {
+  id: number;
+  name: string;
+  evolvesTo: EvolutionNode[];
+}
+
+const evoCache = new Map<string, EvolutionNode | null>();
+export async function fetchEvolutionChain(speciesUrl: string): Promise<EvolutionNode | null> {
+  if (!speciesUrl) return null;
+  if (evoCache.has(speciesUrl)) return evoCache.get(speciesUrl)!;
+  try {
+    const sp = await fetch(speciesUrl).then((r) => r.json());
+    const evoUrl: string | undefined = sp.evolution_chain?.url;
+    if (!evoUrl) {
+      evoCache.set(speciesUrl, null);
+      return null;
+    }
+    const ev = await fetch(evoUrl).then((r) => r.json());
+    const walk = (n: { species: { name: string; url: string }; evolves_to: unknown[] }): EvolutionNode => ({
+      id: Number(n.species.url.split("/").filter(Boolean).pop()),
+      name: n.species.name,
+      evolvesTo: (n.evolves_to as { species: { name: string; url: string }; evolves_to: unknown[] }[]).map(walk),
+    });
+    const root = walk(ev.chain);
+    evoCache.set(speciesUrl, root);
+    return root;
+  } catch {
+    evoCache.set(speciesUrl, null);
+    return null;
+  }
+}
+
 export function formatName(name: string): string {
   return name
     .split("-")
