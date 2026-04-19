@@ -1,4 +1,7 @@
 import type { PokemonType } from "./pokemon-types";
+import bstJson from "./base-stat-totals.json";
+
+const BST_TABLE = bstJson as Record<string, number>;
 
 export interface PokemonListItem {
   id: number;
@@ -156,11 +159,14 @@ export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDet
 }
 
 /**
- * Read a Pokémon's base stat total from already-cached full details (memory
- * or localStorage). Returns null if not yet cached — does NOT trigger a
- * network request, so it's safe to call for the entire Pokédex on render.
+ * Synchronous base stat total lookup. Backed by a bundled static dataset
+ * covering all 1025 species, since base stats are fixed game data and never
+ * change. Falls back to cached full detail for forms or species not in the
+ * bundle.
  */
 export function getCachedBaseStatTotal(id: number): number | null {
+  const bundled = BST_TABLE[String(id)];
+  if (typeof bundled === "number") return bundled;
   let detail = fullDetailCache.get(id) ?? null;
   if (!detail) {
     detail = readFullDetailCache(id);

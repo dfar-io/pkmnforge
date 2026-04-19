@@ -140,16 +140,12 @@ const PokedexPage = () => {
     } else if (sortMode === "name") {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortMode === "bst") {
-      // Use cached BST when available; uncached Pokémon sort to the end.
-      // Note: this re-evaluates on every filter change (cheap), and BST will
-      // "fill in" as users visit Pokémon detail pages and populate the cache.
+      // BST is bundled as static data, so this is fully populated for all
+      // 1025 species. Higher BST first; ties broken by dex id.
       sorted.sort((a, b) => {
-        const ba = getCachedBaseStatTotal(a.id);
-        const bb = getCachedBaseStatTotal(b.id);
-        if (ba == null && bb == null) return a.id - b.id;
-        if (ba == null) return 1;
-        if (bb == null) return -1;
-        if (ba !== bb) return bb - ba; // higher BST first
+        const ba = getCachedBaseStatTotal(a.id) ?? 0;
+        const bb = getCachedBaseStatTotal(b.id) ?? 0;
+        if (ba !== bb) return bb - ba;
         return a.id - b.id;
       });
     } else {
