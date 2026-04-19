@@ -95,6 +95,7 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
             options={items}
             placeholder={items.length ? "Pick item" : "Loading items…"}
             disabled={items.length === 0}
+            allowCustom
           />
         </div>
       </div>
