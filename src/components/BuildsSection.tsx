@@ -106,6 +106,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         pokemon={pokemon}
         open={importing}
         onOpenChange={setImporting}
+        onImport={(draft) => create(pokemon.id, draft)}
       />
 
       {creating && (
