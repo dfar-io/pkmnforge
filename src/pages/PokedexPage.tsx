@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, X, Loader2, Star, ChevronRight, Check } from "lucide-react";
+import { Search, X, Loader2, Star, ChevronRight, Check, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   fetchPokemonIdsByType,
   fetchPokemonList,
   formatName,
+  getCachedBaseStatTotal,
   type PokemonListItem,
 } from "@/lib/pokeapi";
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
@@ -19,6 +20,20 @@ import { usePokemonTypes } from "@/hooks/usePokemonTypes";
 import { useBuilds } from "@/hooks/useBuilds";
 
 const PAGE_SIZE = 60;
+
+type SortMode = "tier" | "dex" | "name" | "bst";
+
+const SORT_LABEL: Record<SortMode, string> = {
+  tier: "Smogon tier",
+  dex: "Dex number",
+  name: "Name (A–Z)",
+  bst: "Base stat total",
+};
+
+const SORT_STORAGE_KEY = "pokenex.pokedex.sort.v1";
+
+const isSortMode = (v: unknown): v is SortMode =>
+  v === "tier" || v === "dex" || v === "name" || v === "bst";
 
 const PokedexPage = () => {
   const [list, setList] = useState<PokemonListItem[]>([]);
