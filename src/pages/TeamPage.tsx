@@ -115,7 +115,7 @@ const TeamPage = () => {
       </section>
 
       <section>
-        <SuggestTeammate team={pokemonOnly} excludeIds={excludeIds} canAdd={!isFull} />
+        <SuggestTypes team={pokemonOnly} />
       </section>
 
       <section>
