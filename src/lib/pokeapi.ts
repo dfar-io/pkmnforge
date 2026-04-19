@@ -155,6 +155,21 @@ export async function fetchPokemonFullDetail(id: number): Promise<PokemonFullDet
   return detail;
 }
 
+/**
+ * Read a Pokémon's base stat total from already-cached full details (memory
+ * or localStorage). Returns null if not yet cached — does NOT trigger a
+ * network request, so it's safe to call for the entire Pokédex on render.
+ */
+export function getCachedBaseStatTotal(id: number): number | null {
+  let detail = fullDetailCache.get(id) ?? null;
+  if (!detail) {
+    detail = readFullDetailCache(id);
+    if (detail) fullDetailCache.set(id, detail);
+  }
+  if (!detail) return null;
+  return detail.stats.reduce((sum, s) => sum + s.base, 0);
+}
+
 export interface EvolutionNode {
   id: number;
   name: string;
