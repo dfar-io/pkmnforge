@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeftRight, Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
@@ -29,6 +29,7 @@ interface BuildsSectionProps {
 export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const { getForPokemon, create, update, remove, duplicate } = useBuilds();
   const { team, setTeam } = useTeamContext();
+  const navigate = useNavigate();
   const builds = getForPokemon(pokemon.id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -98,7 +99,9 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         ? prev
         : [...prev, { pokemonId: pokemon.id, buildId: b.id, pokemon: slim }],
     );
-    toast.success(`${b.name} added to team`);
+    toast.success(`${b.name} added to team`, {
+      action: { label: "View team", onClick: () => navigate("/") },
+    });
   };
 
   /**
@@ -117,7 +120,9 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         return m;
       }),
     );
-    toast.success(`Swapped to "${b.name}"`);
+    toast.success(`Swapped to "${b.name}"`, {
+      action: { label: "View team", onClick: () => navigate("/") },
+    });
   };
 
   return (
