@@ -41,7 +41,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
-      <BuildDetailsPopover build={build} pokemonName={member.pokemon.name} />
+      <BuildDetailsPopover build={build} pokemonId={member.pokemonId} pokemonName={member.pokemon.name} />
 
       <button
         onClick={onRemove}
