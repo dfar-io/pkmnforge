@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, Upload, AlertTriangle, Package, Users } from "lucide-react";
+import { Download, Upload, AlertTriangle, Package, Users, Star } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useBuilds } from "@/hooks/useBuilds";
+import { useFavorites } from "@/hooks/useFavorites";
 import { useSavedTeams } from "@/hooks/useSavedTeams";
 import {
   buildBackup,
@@ -28,6 +29,7 @@ type ImportMode = "merge" | "replace";
 const SettingsPage = () => {
   const { builds, replaceAll: replaceBuilds } = useBuilds();
   const { teams, replaceAll: replaceTeams } = useSavedTeams();
+  const { favorites, replaceAll: replaceFavorites } = useFavorites();
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<{
     parsed: ParsedBackup;
@@ -40,11 +42,11 @@ const SettingsPage = () => {
   }, []);
 
   const handleExport = () => {
-    if (builds.length === 0 && teams.length === 0) {
+    if (builds.length === 0 && teams.length === 0 && favorites.length === 0) {
       toast.error("Nothing to export yet");
       return;
     }
-    const data = buildBackup(builds, teams);
+    const data = buildBackup(builds, teams, favorites);
     downloadJson(formatBackupFilename(), data);
     toast.success("Backup downloaded");
   };
@@ -60,7 +62,11 @@ const SettingsPage = () => {
     try {
       const text = await file.text();
       const parsed = parseBackup(text);
-      if (parsed.builds.length === 0 && parsed.savedTeams.length === 0) {
+      if (
+        parsed.builds.length === 0 &&
+        parsed.savedTeams.length === 0 &&
+        parsed.favorites.length === 0
+      ) {
         toast.error("Backup is empty");
         return;
       }
@@ -79,16 +85,17 @@ const SettingsPage = () => {
     if (mode === "replace") {
       replaceBuilds(parsed.builds);
       replaceTeams(parsed.savedTeams);
+      replaceFavorites(parsed.favorites);
     } else {
       replaceBuilds(mergeById(builds, parsed.builds));
       replaceTeams(mergeById(teams, parsed.savedTeams));
+      replaceFavorites(Array.from(new Set([...favorites, ...parsed.favorites])));
     }
-    const skipNote =
-      parsed.skipped.builds + parsed.skipped.savedTeams > 0
-        ? ` (skipped ${parsed.skipped.builds + parsed.skipped.savedTeams} invalid)`
-        : "";
+    const skippedTotal =
+      parsed.skipped.builds + parsed.skipped.savedTeams + parsed.skipped.favorites;
+    const skipNote = skippedTotal > 0 ? ` (skipped ${skippedTotal} invalid)` : "";
     toast.success(
-      `Imported ${parsed.builds.length} builds and ${parsed.savedTeams.length} teams${skipNote}`,
+      `Imported ${parsed.builds.length} builds, ${parsed.savedTeams.length} teams, ${parsed.favorites.length} favorites${skipNote}`,
     );
     setPending(null);
   };
@@ -108,7 +115,7 @@ const SettingsPage = () => {
 
         <div className="rounded-2xl bg-gradient-card shadow-card p-4 space-y-4">
           <h3 className="font-display text-lg font-bold">Your data</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <Stat
               icon={<Package className="h-4 w-4" />}
               label="Builds"
@@ -119,6 +126,11 @@ const SettingsPage = () => {
               label="Saved teams"
               value={teams.length}
             />
+            <Stat
+              icon={<Star className="h-4 w-4" />}
+              label="Favorites"
+              value={favorites.length}
+            />
           </div>
         </div>
 
@@ -126,8 +138,8 @@ const SettingsPage = () => {
           <div>
             <h3 className="font-display text-lg font-bold">Export</h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Downloads a JSON file containing every build and saved team.
-              Favorites and the active team aren't included.
+              Downloads a JSON file containing every build, saved team, and
+              favorited Pokémon. The active team isn't included.
             </p>
           </div>
           <Button onClick={handleExport} className="w-full" variant="default">
@@ -174,22 +186,28 @@ const SettingsPage = () => {
                   contains{" "}
                   <span className="text-foreground font-medium">
                     {pending?.parsed.builds.length} builds
-                  </span>{" "}
-                  and{" "}
+                  </span>
+                  ,{" "}
                   <span className="text-foreground font-medium">
                     {pending?.parsed.savedTeams.length} saved teams
+                  </span>
+                  , and{" "}
+                  <span className="text-foreground font-medium">
+                    {pending?.parsed.favorites.length} favorites
                   </span>
                   .
                 </p>
                 {pending &&
                   pending.parsed.skipped.builds +
-                    pending.parsed.skipped.savedTeams >
+                    pending.parsed.skipped.savedTeams +
+                    pending.parsed.skipped.favorites >
                     0 && (
                     <p className="flex items-start gap-2 text-warning">
                       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>
                         {pending.parsed.skipped.builds +
-                          pending.parsed.skipped.savedTeams}{" "}
+                          pending.parsed.skipped.savedTeams +
+                          pending.parsed.skipped.favorites}{" "}
                         invalid item(s) will be skipped.
                       </span>
                     </p>

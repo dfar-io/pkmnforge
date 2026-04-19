@@ -50,5 +50,13 @@ export const useFavorites = () => {
     );
   }, []);
 
-  return { favorites, isFavorite, toggleFavorite };
+  /** Replace all favorites wholesale (used by import/restore). */
+  const replaceAll = useCallback((next: number[]) => {
+    const clean = Array.from(
+      new Set(next.filter((n) => Number.isInteger(n) && n > 0)),
+    );
+    setFavorites(clean);
+  }, []);
+
+  return { favorites, isFavorite, toggleFavorite, replaceAll };
 };
