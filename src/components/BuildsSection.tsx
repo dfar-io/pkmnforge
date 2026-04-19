@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Pencil, Plus, Sparkles, Trash2, Check } from "lucide-react";
+import { Copy, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { BuildEditor } from "@/components/BuildEditor";
 import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
@@ -20,6 +30,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const builds = getForPokemon(pokemon.id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
   const isFull = team.length >= TEAM_SIZE;
 
   const slim = {
@@ -50,6 +61,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     setTeam((prev) => prev.filter((m) => m.buildId !== b.id));
     remove(b.id);
     toast.success(`Build "${b.name}" deleted`);
+    setPendingDelete(null);
   };
 
   const handleDuplicate = (b: PokemonBuild) => {
