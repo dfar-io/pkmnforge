@@ -110,6 +110,7 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
             onChange={(v) => setMove(i as 0 | 1 | 2 | 3, v)}
             options={moveOptions}
             placeholder={`Move ${i + 1}`}
+            allowCustom
           />
         ))}
       </div>
