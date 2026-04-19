@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bookmark, BookmarkPlus, Check, MoreHorizontal, Share2, Trash2 } from "lucide-react";
+import { Check, MoreHorizontal, Share2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,12 +8,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SavedTeamsMenu } from "@/components/SavedTeamsMenu";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
 interface HeaderActionsProps {
   team: PokemonDetail[];
-  onLoad: (members: PokemonDetail[]) => void;
   onShare: () => void;
   onClear: () => void;
   justCopied: boolean;
