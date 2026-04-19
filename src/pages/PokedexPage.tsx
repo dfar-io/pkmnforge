@@ -227,29 +227,79 @@ const PokedexPage = () => {
             const fav = isFavorite(p.id);
             const inTeam = teamIds.has(p.id);
             return (
-              <li key={p.id} className="relative">
-                <Link
-                  to={`/pokedex/${p.id}`}
-                  className="block rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
-                      alt=""
-                      loading="lazy"
-                      className="h-12 w-12 object-contain shrink-0"
-                    />
-                    <div className="min-w-0 flex-1 pr-14">
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        #{String(p.id).padStart(4, "0")}
-                      </p>
-                      <p className="text-sm font-display font-semibold truncate">
-                        {formatName(p.name)}
-                      </p>
-                      <RowTypes id={p.id} />
-                    </div>
-                  </div>
-                </Link>
+              <PokedexRow
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                fav={fav}
+                inTeam={inTeam}
+                isFull={isFull}
+                adding={adding === p.id}
+                onToggleFav={() => toggleFavorite(p.id)}
+                onAdd={() => handleAdd(p.id, p.name)}
+              />
+            );
+          })}
+        </ul>
+      )}
+      <div ref={sentinelRef} className="h-8" />
+    </div>
+  );
+};
+
+interface PokedexRowProps {
+  id: number;
+  name: string;
+  fav: boolean;
+  inTeam: boolean;
+  isFull: boolean;
+  adding: boolean;
+  onToggleFav: () => void;
+  onAdd: () => void;
+}
+
+const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd }: PokedexRowProps) => {
+  const types = usePokemonTypes(id);
+  const primary = types?.[0];
+  return (
+    <li className="relative">
+      <Link
+        to={`/pokedex/${id}`}
+        className={cn(
+          "flex items-stretch rounded-xl bg-secondary/60 hover:bg-secondary overflow-hidden",
+          "transition-all hover:scale-[1.01] active:scale-[0.99]",
+          "border-l-4",
+          primary ? `border-l-type-${primary}` : "border-l-transparent",
+        )}
+        style={
+          primary
+            ? {
+                backgroundImage:
+                  "linear-gradient(90deg, hsl(var(--type-" +
+                  primary +
+                  ") / 0.18), transparent 55%)",
+              }
+            : undefined
+        }
+      >
+        <div className="flex items-center gap-3 p-2 flex-1 min-w-0">
+          <img
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
+            alt=""
+            loading="lazy"
+            className="h-12 w-12 object-contain shrink-0"
+          />
+          <div className="min-w-0 flex-1 pr-14">
+            <p className="text-[10px] text-muted-foreground font-mono">
+              #{String(id).padStart(4, "0")}
+            </p>
+            <p className="text-sm font-display font-semibold truncate">
+              {formatName(name)}
+            </p>
+            <RowTypes types={types} />
+          </div>
+        </div>
+      </Link>
                 <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
                   <button
                     type="button"
