@@ -129,20 +129,29 @@ const PokemonDetailPage = () => {
           Base stats
         </h2>
         <div className="space-y-1.5">
-          {detail.stats.map((s) => (
-            <div key={s.name} className="flex items-center gap-3">
-              <span className="text-[11px] font-display font-semibold uppercase tracking-wide w-14 text-muted-foreground">
-                {STAT_LABEL[s.name] ?? s.name}
-              </span>
-              <span className="text-xs font-mono w-8 text-right">{s.base}</span>
-              <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className="h-full bg-primary"
-                  style={{ width: `${Math.min(100, (s.base / 200) * 100)}%` }}
-                />
+          {detail.stats.map((s) => {
+            const ratio = Math.min(1, Math.max(0, s.base / 255));
+            // Hue interpolation: 0 (red) → 60 (yellow) → 120 (green) → 240 (blue).
+            // Stretch the green→blue segment over the top half of the range.
+            const hue = ratio <= 0.5 ? ratio * 2 * 120 : 120 + (ratio - 0.5) * 2 * 120;
+            return (
+              <div key={s.name} className="flex items-center gap-3">
+                <span className="text-[11px] font-display font-semibold uppercase tracking-wide w-14 text-muted-foreground">
+                  {STAT_LABEL[s.name] ?? s.name}
+                </span>
+                <span className="text-xs font-mono w-8 text-right">{s.base}</span>
+                <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
+                  <div
+                    className="h-full transition-all"
+                    style={{
+                      width: `${ratio * 100}%`,
+                      backgroundColor: `hsl(${hue} 75% 50%)`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="flex items-center gap-3 pt-1 border-t border-border/40 mt-1">
             <span className="text-[11px] font-display font-bold uppercase tracking-wide w-14">
               Total
