@@ -57,32 +57,30 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Ability
-          </Label>
-          <div className="mt-1">
-            <Combobox
-              value={draft.ability}
-              onChange={(v) => setDraft({ ...draft, ability: v })}
-              options={abilityOptions}
-              placeholder="Pick ability"
-            />
-          </div>
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Ability
+        </Label>
+        <div className="mt-1">
+          <Combobox
+            value={draft.ability}
+            onChange={(v) => setDraft({ ...draft, ability: v })}
+            options={abilityOptions}
+            placeholder="Pick ability"
+          />
         </div>
-        <div>
-          <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Nature
-          </Label>
-          <div className="mt-1">
-            <Combobox
-              value={draft.natureId}
-              onChange={(v) => setDraft({ ...draft, natureId: v })}
-              options={NATURE_OPTIONS}
-              placeholder="Pick nature"
-            />
-          </div>
+      </div>
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Nature
+        </Label>
+        <div className="mt-1">
+          <Combobox
+            value={draft.natureId}
+            onChange={(v) => setDraft({ ...draft, natureId: v })}
+            options={NATURE_OPTIONS}
+            placeholder="Pick nature"
+          />
         </div>
       </div>
 
