@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { Lightbulb, Shield } from "lucide-react";
 import {
   POKEMON_TYPES,
@@ -27,6 +28,7 @@ interface TypeSuggestion {
 const TOP_N = 4;
 
 export const SuggestTypes = ({ team }: SuggestTypesProps) => {
+  const navigate = useNavigate();
   // Top threat types: those at least one team member is weak to, weighted by
   // how many members share the weakness.
   const threats = useMemo(() => {
@@ -102,14 +104,19 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
               className="rounded-xl bg-secondary/60 p-2.5 space-y-1.5"
             >
               <div className="flex items-center gap-2">
-                <span
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate("/pokedex", { state: { initialTypes: [s.type] } })
+                  }
                   className={cn(
-                    "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground",
+                    "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     `bg-type-${s.type}`,
                   )}
+                  aria-label={`Browse ${TYPE_LABEL[s.type]} type Pokémon`}
                 >
                   {TYPE_LABEL[s.type]}
-                </span>
+                </button>
                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
                   <Shield className="h-3 w-3" />
                   Score {Math.round(s.score * 10) / 10}

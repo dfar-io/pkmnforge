@@ -45,17 +45,27 @@ const PokedexPage = () => {
     document.title = "Pokédex – Pokénex";
   }, []);
 
-  // When arriving from an empty team slot, jump to top and focus search.
+  // When arriving from an empty team slot or a type suggestion, apply state.
   useEffect(() => {
-    const state = location.state as { focusSearch?: boolean } | null;
-    if (!state?.focusSearch) return;
+    const state = location.state as
+      | { focusSearch?: boolean; initialTypes?: PokemonType[] }
+      | null;
+    if (!state?.focusSearch && !state?.initialTypes) return;
+    if (state.initialTypes && state.initialTypes.length > 0) {
+      setActiveTypes(state.initialTypes);
+    }
     window.scrollTo({ top: 0, behavior: "auto" });
-    const id = window.setTimeout(() => {
-      searchInputRef.current?.focus({ preventScroll: true });
-      searchInputRef.current?.select();
-    }, 50);
+    let timeoutId: number | undefined;
+    if (state.focusSearch) {
+      timeoutId = window.setTimeout(() => {
+        searchInputRef.current?.focus({ preventScroll: true });
+        searchInputRef.current?.select();
+      }, 50);
+    }
     navigate(location.pathname, { replace: true, state: {} });
-    return () => window.clearTimeout(id);
+    return () => {
+      if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+    };
   }, [location, navigate]);
 
   useEffect(() => {
