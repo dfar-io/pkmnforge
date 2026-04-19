@@ -372,14 +372,19 @@ const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, showBst, onTogg
                 {formatName(name)}
               </p>
               <SmogonTierBadge pokemonId={id} />
-              {bst != null && (
-                <span
-                  className="text-[10px] font-mono font-bold text-primary tabular-nums shrink-0"
-                  title={`Base stat total: ${bst}`}
-                >
-                  {bst}
-                </span>
-              )}
+              {bst != null && (() => {
+                const ratio = Math.min(1, Math.max(0, bst / 720));
+                const hue = ratio <= 0.5 ? ratio * 2 * 120 : 120 + (ratio - 0.5) * 2 * 120;
+                return (
+                  <span
+                    className="text-[10px] font-mono font-bold tabular-nums shrink-0"
+                    style={{ color: `hsl(${hue} 75% 55%)` }}
+                    title={`Base stat total: ${bst}`}
+                  >
+                    {bst}
+                  </span>
+                );
+              })()}
             </div>
             <RowTypes types={types} />
           </div>
