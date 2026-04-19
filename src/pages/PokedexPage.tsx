@@ -11,6 +11,7 @@ import {
 import { POKEMON_TYPES, TYPE_LABEL, type PokemonType } from "@/lib/pokemon-types";
 import { TypeIcon } from "@/components/TypeBadge";
 import { SmogonTierBadge } from "@/components/SmogonTierBadge";
+import { getSmogonTierRank } from "@/lib/smogon";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
@@ -103,8 +104,17 @@ const PokedexPage = () => {
         );
       }
     }
-    if (!q) return base;
-    return base.filter((p) => p.name.includes(q) || String(p.id) === q);
+    if (q) {
+      base = base.filter((p) => p.name.includes(q) || String(p.id) === q);
+    }
+    // Sort by Smogon tier ascending (AG → Uber → OU → … → LC), then by dex id
+    // for stable ordering within a tier and for unranked Pokémon.
+    return [...base].sort((a, b) => {
+      const ra = getSmogonTierRank(a.id);
+      const rb = getSmogonTierRank(b.id);
+      if (ra !== rb) return ra - rb;
+      return a.id - b.id;
+    });
   }, [list, query, activeTypes, typeIdsMap, matchMode]);
 
   const toggleType = (t: PokemonType) => {
