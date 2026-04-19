@@ -266,6 +266,27 @@ const PokedexPage = () => {
             </button>
           </div>
         )}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-display font-semibold">
+            {filtered.length} {filtered.length === 1 ? "Pokémon" : "Pokémon"}
+          </span>
+          <label className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 pl-2 pr-1 py-0.5 text-[10px] font-display font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowUpDown className="h-3 w-3" />
+            <span className="sr-only">Sort by</span>
+            <select
+              value={sortMode}
+              onChange={(e) => setSortMode(e.target.value as SortMode)}
+              className="bg-transparent border-0 outline-none cursor-pointer text-foreground py-1 pr-1 focus:outline-none"
+              aria-label="Sort Pokémon by"
+            >
+              {(Object.keys(SORT_LABEL) as SortMode[]).map((m) => (
+                <option key={m} value={m} className="bg-popover text-popover-foreground">
+                  {SORT_LABEL[m]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {list.length === 0 || (typeLoading && filtered.length === 0) ? (
