@@ -328,12 +328,15 @@ export function clearPokeapiCaches(): { items: number; pokemon: number } {
   fullDetailCache.clear();
   evoCache.clear();
   cachedItems = null;
+  moveTypeMem.clear();
+  moveTypeDiskLoaded = false;
   if (typeof window !== "undefined") {
     try {
       if (window.localStorage.getItem(ITEMS_CACHE_KEY)) {
         window.localStorage.removeItem(ITEMS_CACHE_KEY);
         itemsCleared = 1;
       }
+      window.localStorage.removeItem(MOVE_TYPE_CACHE_KEY);
       const toRemove: string[] = [];
       for (let i = 0; i < window.localStorage.length; i++) {
         const k = window.localStorage.key(i);
