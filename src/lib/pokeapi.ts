@@ -194,6 +194,70 @@ export function formatName(name: string): string {
     .join(" ");
 }
 
+// Move name → attacking type. Cached in-memory + localStorage forever (a
+// move's type doesn't change). Used by offensive team coverage.
+const MOVE_TYPE_CACHE_KEY = "pokenex.moveTypes.v1";
+
+const moveTypeMem = new Map<string, PokemonType>();
+let moveTypeDiskLoaded = false;
+
+const loadMoveTypeDisk = () => {
+  if (moveTypeDiskLoaded || typeof window === "undefined") return;
+  moveTypeDiskLoaded = true;
+  try {
+    const raw = window.localStorage.getItem(MOVE_TYPE_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, PokemonType>;
+    if (parsed && typeof parsed === "object") {
+      for (const [k, v] of Object.entries(parsed)) moveTypeMem.set(k, v);
+    }
+  } catch {
+    /* ignore */
+  }
+};
+
+const saveMoveTypeDisk = () => {
+  if (typeof window === "undefined") return;
+  try {
+    const obj: Record<string, PokemonType> = {};
+    for (const [k, v] of moveTypeMem) obj[k] = v;
+    window.localStorage.setItem(MOVE_TYPE_CACHE_KEY, JSON.stringify(obj));
+  } catch {
+    /* ignore */
+  }
+};
+
+const inflightMove = new Map<string, Promise<PokemonType | null>>();
+
+export async function fetchMoveType(name: string): Promise<PokemonType | null> {
+  if (!name) return null;
+  loadMoveTypeDisk();
+  const cached = moveTypeMem.get(name);
+  if (cached) return cached;
+  const inflight = inflightMove.get(name);
+  if (inflight) return inflight;
+  const p = (async () => {
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/move/${name}`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      const type = data?.type?.name as PokemonType | undefined;
+      const damageClass = data?.damage_class?.name as string | undefined;
+      // Status moves (no damage) shouldn't count toward offensive coverage.
+      if (!type || damageClass === "status") return null;
+      moveTypeMem.set(name, type);
+      saveMoveTypeDisk();
+      return type;
+    } catch {
+      return null;
+    } finally {
+      inflightMove.delete(name);
+    }
+  })();
+  inflightMove.set(name, p);
+  return p;
+}
+
 // Full PokeAPI item list. Cached in localStorage so we only hit the network
 // once per device per cache window (the catalog rarely changes).
 const ITEMS_CACHE_KEY = "pokenex.items.v1";
@@ -264,12 +328,15 @@ export function clearPokeapiCaches(): { items: number; pokemon: number } {
   fullDetailCache.clear();
   evoCache.clear();
   cachedItems = null;
+  moveTypeMem.clear();
+  moveTypeDiskLoaded = false;
   if (typeof window !== "undefined") {
     try {
       if (window.localStorage.getItem(ITEMS_CACHE_KEY)) {
         window.localStorage.removeItem(ITEMS_CACHE_KEY);
         itemsCleared = 1;
       }
+      window.localStorage.removeItem(MOVE_TYPE_CACHE_KEY);
       const toRemove: string[] = [];
       for (let i = 0; i < window.localStorage.length; i++) {
         const k = window.localStorage.key(i);
