@@ -38,9 +38,17 @@ export const Combobox = ({
   emptyText = "No matches",
   disabled,
   triggerLabel,
+  allowCustom = false,
 }: ComboboxProps) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+
+  const commitCustom = () => {
+    const v = query.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!v) return;
+    onChange(v);
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) setQuery("");
