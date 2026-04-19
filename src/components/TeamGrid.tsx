@@ -16,13 +16,15 @@ import {
 } from "@dnd-kit/sortable";
 import { BuildSlot } from "@/components/team/BuildSlot";
 import { EmptyTeamSlot } from "@/components/team/EmptyTeamSlot";
-import type { TeamMember } from "@/lib/builds";
+import type { PokemonBuild, TeamMember } from "@/lib/builds";
 
 interface TeamGridProps {
   team: TeamMember[];
   teamSize: number;
   /** Resolve a build id → display name. */
   getBuildName: (buildId: string) => string;
+  /** Resolve a build id → full build object (for details popover). */
+  getBuild: (buildId: string) => PokemonBuild | undefined;
   onAddSlot: () => void;
   onRemove: (slot: number) => void;
   onReorder: (next: TeamMember[]) => void;
@@ -40,6 +42,7 @@ export const TeamGrid = ({
   team,
   teamSize,
   getBuildName,
+  getBuild,
   onAddSlot,
   onRemove,
   onReorder,
@@ -81,6 +84,7 @@ export const TeamGrid = ({
               <BuildSlot
                 key={slotKey(member)}
                 member={member}
+                build={getBuild(member.buildId)}
                 buildName={getBuildName(member.buildId)}
                 onRemove={() => onRemove(i)}
                 onOpenDetail={() => onOpenDetail(member.pokemonId)}

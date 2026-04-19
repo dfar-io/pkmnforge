@@ -47,6 +47,7 @@ const TeamPage = () => {
           team={team}
           teamSize={TEAM_SIZE}
           getBuildName={(id) => getById(id)?.name ?? "No build"}
+          getBuild={(id) => getById(id)}
           onAddSlot={goToPokedex}
           onRemove={(slot) => setTeam((prev) => prev.filter((_, i) => i !== slot))}
           onReorder={(next) => setTeam(next)}
