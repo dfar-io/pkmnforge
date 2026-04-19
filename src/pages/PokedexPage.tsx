@@ -308,6 +308,7 @@ const PokedexPage = () => {
                 inTeam={inTeam}
                 buildCount={buildCount}
                 isFull={isFull}
+                showBst={sortMode === "bst"}
                 onToggleFav={() => toggleFavorite(p.id)}
               />
             );
@@ -326,12 +327,14 @@ interface PokedexRowProps {
   inTeam: boolean;
   buildCount: number;
   isFull: boolean;
+  showBst: boolean;
   onToggleFav: () => void;
 }
 
-const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, onToggleFav }: PokedexRowProps) => {
+const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, showBst, onToggleFav }: PokedexRowProps) => {
   const types = usePokemonTypes(id);
   const primary = types?.[0];
+  const bst = showBst ? getCachedBaseStatTotal(id) : null;
   return (
     <li className="relative">
       <Link
@@ -369,6 +372,14 @@ const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, onToggleFav }: 
                 {formatName(name)}
               </p>
               <SmogonTierBadge pokemonId={id} />
+              {bst != null && (
+                <span
+                  className="text-[10px] font-mono font-bold text-primary tabular-nums shrink-0"
+                  title={`Base stat total: ${bst}`}
+                >
+                  {bst}
+                </span>
+              )}
             </div>
             <RowTypes types={types} />
           </div>
