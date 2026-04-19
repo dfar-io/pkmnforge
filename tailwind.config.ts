@@ -6,6 +6,11 @@ const types = [
 ];
 const typeColors = Object.fromEntries(types.map(t => [t, `hsl(var(--type-${t}))`]));
 
+const tiers = [
+  "ag","uber","ou","uubl","uu","rubl","ru","nubl","nu","publ","pu","zubl","zu","nfe","lc"
+];
+const tierColors = Object.fromEntries(tiers.map(t => [t, `hsl(var(--tier-${t}))`]));
+
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
@@ -30,6 +35,7 @@ export default {
         popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
         type: typeColors,
+        tier: { ...tierColors, foreground: "hsl(var(--tier-foreground))" },
       },
       backgroundImage: {
         "gradient-hero": "var(--gradient-hero)",
@@ -63,6 +69,8 @@ export default {
     ...types.map(t => `text-type-${t}`),
     ...types.map(t => `border-type-${t}`),
     ...types.map(t => `border-l-type-${t}`),
+    ...tiers.map(t => `bg-tier-${t}`),
+    ...tiers.map(t => `text-tier-${t}`),
   ],
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
