@@ -101,6 +101,25 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     toast.success(`${b.name} added to team`);
   };
 
+  /**
+   * Swap the team slot for this Pokémon to use build `b` instead.
+   * Replaces the first matching slot in place (preserves position).
+   */
+  const handleSwapInTeam = (b: PokemonBuild) => {
+    if (buildIdsInTeam.has(b.id)) return;
+    let swapped = false;
+    setTeam((prev) =>
+      prev.map((m) => {
+        if (!swapped && m.pokemonId === pokemon.id) {
+          swapped = true;
+          return { ...m, buildId: b.id };
+        }
+        return m;
+      }),
+    );
+    toast.success(`Swapped to "${b.name}"`);
+  };
+
   return (
     <section id="builds" className="scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
