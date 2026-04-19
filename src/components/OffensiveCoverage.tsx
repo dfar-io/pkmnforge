@@ -239,13 +239,42 @@ export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
       </ul>
 
       {uncovered.length > 0 && (
-        <p className="mt-3 pt-3 border-t border-border text-[10px] text-muted-foreground">
-          Gaps: no team move hits{" "}
-          <span className="font-display font-bold text-destructive">
-            {uncovered.map((u) => TYPE_LABEL[u.defender]).join(", ")}
-          </span>{" "}
-          for neutral or better damage.
-        </p>
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
+          <p className="text-[10px] text-muted-foreground">
+            Gaps: no team move hits{" "}
+            <span className="font-display font-bold text-destructive">
+              {uncovered.map((u) => TYPE_LABEL[u.defender]).join(", ")}
+            </span>{" "}
+            for neutral or better damage.
+          </p>
+          {suggestions.length > 0 && (
+            <div className="rounded-lg bg-primary/10 border border-primary/30 p-2.5">
+              <p className="text-[10px] uppercase tracking-wider text-primary font-display font-bold mb-1.5">
+                Suggested coverage moves
+              </p>
+              <ul className="space-y-1.5">
+                {suggestions.map((s) => (
+                  <li key={s.type} className="flex items-center gap-2 text-[11px]">
+                    <span
+                      className={cn(
+                        "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground shrink-0",
+                        `bg-type-${s.type}`,
+                      )}
+                    >
+                      {TYPE_LABEL[s.type]}
+                    </span>
+                    <span className="text-muted-foreground">
+                      covers{" "}
+                      <span className="text-foreground font-semibold">
+                        {s.covers.map((c) => TYPE_LABEL[c]).join(", ")}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
