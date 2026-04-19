@@ -86,7 +86,7 @@ const TeamPage = () => {
                       onClick={isNextEmpty ? goToPokedex : undefined}
                       disabled={!isNextEmpty}
                       className={cn(
-                        "group relative aspect-square rounded-2xl border-2 border-dashed bg-card/40 flex flex-col items-center justify-center gap-1 transition-all",
+                        "group relative aspect-[4/3] rounded-2xl border-2 border-dashed bg-card/40 flex flex-col items-center justify-center gap-1 transition-all",
                         isNextEmpty
                           ? "border-border hover:border-primary hover:bg-card hover:shadow-glow active:scale-95"
                           : "border-border/40 opacity-50 cursor-not-allowed",
