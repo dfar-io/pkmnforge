@@ -25,7 +25,7 @@ import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
-import { getNatureById } from "@/lib/natures";
+
 import { formatName } from "@/lib/pokeapi";
 import type { TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
