@@ -91,20 +91,48 @@ export const OffensiveCoverage = ({ team }: OffensiveCoverageProps) => {
 
   const rows = useMemo<CoverageRow[]>(() => {
     return DEFENDERS.map((defender) => {
-      let best = 1; // neutral by default
+      let best = 0;
+      let any = false;
       const hitters: TeamMember[] = [];
       for (const ma of memberAttacks) {
-        let memberBest = 0;
+        let memberBest = -1;
         for (const atk of ma.attackTypes) {
+          any = true;
           const mult = getMultiplier(atk, [defender]);
           if (mult > memberBest) memberBest = mult;
         }
         if (memberBest > best) best = memberBest;
         if (classify(memberBest) === "weak") hitters.push(ma.member);
       }
-      return { defender, bestMultiplier: best, hittersSE: hitters };
+      return { defender, bestMultiplier: any ? best : 1, hittersSE: hitters };
     });
   }, [memberAttacks]);
+
+  // Suggest attacking types that would close the most gaps, excluding types
+  // the team already has in its move pool.
+  const ownedTypes = useMemo(() => {
+    const s = new Set<PokemonType>();
+    for (const ma of memberAttacks) for (const t of ma.attackTypes) s.add(t);
+    return s;
+  }, [memberAttacks]);
+
+  const suggestions = useMemo(() => {
+    const gaps = DEFENDERS.filter((d) => {
+      const row = rows.find((r) => r.defender === d);
+      if (!row) return false;
+      const eff = classify(row.bestMultiplier);
+      return eff === "resist" || eff === "immune";
+    });
+    if (gaps.length === 0) return [] as { type: PokemonType; covers: PokemonType[] }[];
+    const scored = POKEMON_TYPES.filter((t) => !ownedTypes.has(t)).map((atk) => {
+      const covers = gaps.filter((g) => getMultiplier(atk, [g]) > 1);
+      return { type: atk, covers };
+    });
+    return scored
+      .filter((s) => s.covers.length > 0)
+      .sort((a, b) => b.covers.length - a.covers.length)
+      .slice(0, 3);
+  }, [rows, ownedTypes]);
 
   const totalMoves = moveNames.length;
   const resolvedCount = moveNames.filter((n) => resolved.has(n)).length;
