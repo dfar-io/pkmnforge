@@ -190,14 +190,6 @@ const BuildSlot = ({ member, buildName, onRemove, onOpenDetail }: BuildSlotProps
             <TypeIcon key={t} type={t} />
           ))}
         </div>
-        {natureLabel && (
-          <div className="mt-1 flex justify-center">
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-px text-[9px] font-display font-bold uppercase tracking-wider text-primary">
-              <Sparkles className="h-2 w-2" />
-              {natureLabel}
-            </span>
-          </div>
-        )}
       </div>
 
       <GripVertical className="absolute bottom-1 right-1 h-3 w-3 text-muted-foreground/40 pointer-events-none" />
