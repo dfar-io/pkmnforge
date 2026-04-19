@@ -43,6 +43,17 @@ const PokedexPage = () => {
   const [typeIdsMap, setTypeIdsMap] = useState<Record<string, Set<number>>>({});
   const [typeLoading, setTypeLoading] = useState(false);
   const [matchMode, setMatchMode] = useState<"any" | "all">("any");
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    if (typeof window === "undefined") return "tier";
+    const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
+    return isSortMode(stored) ? stored : "tier";
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SORT_STORAGE_KEY, sortMode);
+  }, [sortMode]);
+
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const location = useLocation();
