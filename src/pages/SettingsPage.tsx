@@ -185,7 +185,7 @@ const SettingsPage = () => {
                   pending.parsed.skipped.builds +
                     pending.parsed.skipped.savedTeams >
                     0 && (
-                    <p className="flex items-start gap-2 text-amber-500">
+                    <p className="flex items-start gap-2 text-warning">
                       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                       <span>
                         {pending.parsed.skipped.builds +

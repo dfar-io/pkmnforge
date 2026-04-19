@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Layers, BookOpen } from "lucide-react";
+import { Layers, BookOpen, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", label: "Team", icon: Layers, end: true },
   { to: "/pokedex", label: "Pokédex", icon: BookOpen, end: false },
+  { to: "/settings", label: "Settings", icon: Settings, end: false },
 ];
 
 export const BottomTabBar = () => (
@@ -12,7 +13,7 @@ export const BottomTabBar = () => (
     aria-label="Primary"
     className="fixed bottom-0 inset-x-0 z-30 border-t border-border/60 bg-background/90 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
   >
-    <ul className="max-w-2xl mx-auto grid grid-cols-2">
+    <ul className="max-w-2xl mx-auto grid grid-cols-3">
       {tabs.map(({ to, label, icon: Icon, end }) => (
         <li key={to}>
           <NavLink
