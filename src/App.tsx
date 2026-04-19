@@ -9,6 +9,7 @@ import AppLayout from "@/components/AppLayout";
 import TeamPage from "./pages/TeamPage";
 import PokedexPage from "./pages/PokedexPage";
 import PokemonDetailPage from "./pages/PokemonDetailPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<TeamPage />} />
               <Route path="/pokedex" element={<PokedexPage />} />
               <Route path="/pokedex/:id" element={<PokemonDetailPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
