@@ -104,7 +104,6 @@ const TeamPage = () => {
                     key={`slot-${member.pokemonId}-${member.buildId}`}
                     member={member}
                     buildName={build?.name ?? "No build"}
-                    natureLabel={getNatureById(build?.natureId)?.name}
                     onRemove={() => handleRemove(i)}
                     onOpenDetail={() => navigate(`/pokedex/${member.pokemonId}`)}
                   />
