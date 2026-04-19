@@ -1,20 +1,9 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { TeamGrid } from "@/components/TeamGrid";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { PokemonPicker } from "@/components/PokemonPicker";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
 import { TeamSlotSheet } from "@/components/TeamSlotSheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import type { PokemonDetail } from "@/lib/pokeapi";
 
