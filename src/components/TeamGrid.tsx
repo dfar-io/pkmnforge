@@ -71,7 +71,7 @@ export const TeamGrid = ({ team, teamSize, natures, onOpenPicker, onRemove, onRe
         onDragEnd={handleDragEnd}
       >
         <SortableContext items={sortableIds} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-2 gap-2.5">
             {Array.from({ length: teamSize }).map((_, i) => {
               const member = team[i];
               const isNextEmpty = !member && i === team.length;
