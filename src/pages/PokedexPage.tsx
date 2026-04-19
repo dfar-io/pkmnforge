@@ -250,7 +250,7 @@ const PokedexPage = () => {
                     </div>
                   </div>
                 </Link>
-                <div className="absolute top-1 right-1 flex flex-col gap-1">
+                <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -300,6 +300,26 @@ const PokedexPage = () => {
         </ul>
       )}
       <div ref={sentinelRef} className="h-8" />
+    </div>
+  );
+};
+
+const RowTypes = ({ id }: { id: number }) => {
+  const types = usePokemonTypes(id);
+  if (!types || types.length === 0) {
+    return <div className="mt-1 h-4" aria-hidden />;
+  }
+  return (
+    <div className="flex items-center gap-1 mt-1">
+      {types.map((t) => (
+        <span
+          key={t}
+          className="inline-flex items-center gap-1 rounded-full bg-background/40 px-1.5 py-0.5 text-[9px] font-display font-semibold uppercase tracking-wide text-foreground/80"
+        >
+          <TypeIcon type={t} className="h-3 w-3 ring-0" />
+          {TYPE_LABEL[t]}
+        </span>
+      ))}
     </div>
   );
 };
