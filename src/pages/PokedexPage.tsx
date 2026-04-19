@@ -227,74 +227,17 @@ const PokedexPage = () => {
             const fav = isFavorite(p.id);
             const inTeam = teamIds.has(p.id);
             return (
-              <li key={p.id} className="relative">
-                <Link
-                  to={`/pokedex/${p.id}`}
-                  className="block rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
-                      alt=""
-                      loading="lazy"
-                      className="h-12 w-12 object-contain shrink-0"
-                    />
-                    <div className="min-w-0 flex-1 pr-14">
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        #{String(p.id).padStart(4, "0")}
-                      </p>
-                      <p className="text-sm font-display font-semibold truncate">
-                        {formatName(p.name)}
-                      </p>
-                      <RowTypes id={p.id} />
-                    </div>
-                  </div>
-                </Link>
-                <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleFavorite(p.id);
-                    }}
-                    aria-label={fav ? "Remove from favorites" : "Add to favorites"}
-                    aria-pressed={fav}
-                    className={cn(
-                      "grid place-items-center h-6 w-6 rounded-full transition-colors",
-                      fav
-                        ? "text-favorite hover:text-favorite/80"
-                        : "text-muted-foreground/60 hover:text-favorite",
-                    )}
-                  >
-                    <Star className={cn("h-3.5 w-3.5", fav && "fill-current")} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleAdd(p.id, p.name);
-                    }}
-                    disabled={inTeam || isFull || adding === p.id}
-                    aria-label={inTeam ? "Already in team" : "Add to team"}
-                    className={cn(
-                      "grid place-items-center h-6 w-6 rounded-full transition-colors",
-                      inTeam
-                        ? "text-success"
-                        : isFull
-                          ? "text-muted-foreground/30 cursor-not-allowed"
-                          : "text-muted-foreground/60 hover:text-primary",
-                    )}
-                  >
-                    {adding === p.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : inTeam ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <Plus className="h-3.5 w-3.5" />
-                    )}
-                  </button>
-                </div>
-              </li>
+              <PokedexRow
+                key={p.id}
+                id={p.id}
+                name={p.name}
+                fav={fav}
+                inTeam={inTeam}
+                isFull={isFull}
+                adding={adding === p.id}
+                onToggleFav={() => toggleFavorite(p.id)}
+                onAdd={() => handleAdd(p.id, p.name)}
+              />
             );
           })}
         </ul>
@@ -304,8 +247,108 @@ const PokedexPage = () => {
   );
 };
 
-const RowTypes = ({ id }: { id: number }) => {
+interface PokedexRowProps {
+  id: number;
+  name: string;
+  fav: boolean;
+  inTeam: boolean;
+  isFull: boolean;
+  adding: boolean;
+  onToggleFav: () => void;
+  onAdd: () => void;
+}
+
+const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd }: PokedexRowProps) => {
   const types = usePokemonTypes(id);
+  const primary = types?.[0];
+  return (
+    <li className="relative">
+      <Link
+        to={`/pokedex/${id}`}
+        className={cn(
+          "flex items-stretch rounded-xl bg-secondary/60 hover:bg-secondary overflow-hidden",
+          "transition-all hover:scale-[1.01] active:scale-[0.99]",
+          "border-l-4",
+          primary ? `border-l-type-${primary}` : "border-l-transparent",
+        )}
+        style={
+          primary
+            ? {
+                backgroundImage:
+                  "linear-gradient(90deg, hsl(var(--type-" +
+                  primary +
+                  ") / 0.18), transparent 55%)",
+              }
+            : undefined
+        }
+      >
+        <div className="flex items-center gap-3 p-2 flex-1 min-w-0">
+          <img
+            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
+            alt=""
+            loading="lazy"
+            className="h-12 w-12 object-contain shrink-0"
+          />
+          <div className="min-w-0 flex-1 pr-14">
+            <p className="text-[10px] text-muted-foreground font-mono">
+              #{String(id).padStart(4, "0")}
+            </p>
+            <p className="text-sm font-display font-semibold truncate">
+              {formatName(name)}
+            </p>
+            <RowTypes types={types} />
+          </div>
+        </div>
+      </Link>
+      <div className="absolute top-1/2 -translate-y-1/2 right-2 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onToggleFav();
+          }}
+          aria-label={fav ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={fav}
+          className={cn(
+            "grid place-items-center h-7 w-7 rounded-full transition-colors",
+            fav
+              ? "text-favorite hover:text-favorite/80"
+              : "text-muted-foreground/60 hover:text-favorite",
+          )}
+        >
+          <Star className={cn("h-3.5 w-3.5", fav && "fill-current")} />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            onAdd();
+          }}
+          disabled={inTeam || isFull || adding}
+          aria-label={inTeam ? "Already in team" : "Add to team"}
+          className={cn(
+            "grid place-items-center h-7 w-7 rounded-full transition-colors",
+            inTeam
+              ? "text-success"
+              : isFull
+                ? "text-muted-foreground/30 cursor-not-allowed"
+                : "text-muted-foreground/60 hover:text-primary",
+          )}
+        >
+          {adding ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : inTeam ? (
+            <Check className="h-3.5 w-3.5" />
+          ) : (
+            <Plus className="h-3.5 w-3.5" />
+          )}
+        </button>
+      </div>
+    </li>
+  );
+};
+
+const RowTypes = ({ types }: { types: PokemonType[] | null }) => {
   if (!types || types.length === 0) {
     return <div className="mt-1 h-4" aria-hidden />;
   }

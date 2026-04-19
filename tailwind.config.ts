@@ -62,6 +62,7 @@ export default {
     ...types.map(t => `bg-type-${t}`),
     ...types.map(t => `text-type-${t}`),
     ...types.map(t => `border-type-${t}`),
+    ...types.map(t => `border-l-type-${t}`),
   ],
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
