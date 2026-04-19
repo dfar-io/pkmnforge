@@ -28,6 +28,9 @@ const PokedexPage = () => {
   const [matchMode, setMatchMode] = useState<"any" | "all">("any");
   const [adding, setAdding] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const { team, setTeam } = useTeamContext();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -38,6 +41,19 @@ const PokedexPage = () => {
     fetchPokemonList().then(setList).catch(console.error);
     document.title = "Pokédex – Pokénex";
   }, []);
+
+  // When arriving from an empty team slot, jump to top and focus search.
+  useEffect(() => {
+    const state = location.state as { focusSearch?: boolean } | null;
+    if (!state?.focusSearch) return;
+    window.scrollTo({ top: 0, behavior: "auto" });
+    const id = window.setTimeout(() => {
+      searchInputRef.current?.focus({ preventScroll: true });
+      searchInputRef.current?.select();
+    }, 50);
+    navigate(location.pathname, { replace: true, state: {} });
+    return () => window.clearTimeout(id);
+  }, [location, navigate]);
 
   useEffect(() => {
     const missing = activeTypes.filter((t) => !typeIdsMap[t]);
