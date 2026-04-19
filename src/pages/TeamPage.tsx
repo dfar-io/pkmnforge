@@ -19,7 +19,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { Plus, X, GripVertical, Sparkles } from "lucide-react";
+import { Plus, X, GripVertical } from "lucide-react";
 import { TypeIcon } from "@/components/TypeBadge";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { SuggestTeammate } from "@/components/SuggestTeammate";
