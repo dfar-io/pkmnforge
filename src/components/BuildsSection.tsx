@@ -29,6 +29,7 @@ interface BuildsSectionProps {
 export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const { getForPokemon, create, update, remove, duplicate } = useBuilds();
   const { team, setTeam } = useTeamContext();
+  const navigate = useNavigate();
   const builds = getForPokemon(pokemon.id);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
