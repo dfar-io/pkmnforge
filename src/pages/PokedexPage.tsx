@@ -14,6 +14,7 @@ import { TypeIcon } from "@/components/TypeBadge";
 import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
+import { usePokemonTypes } from "@/hooks/usePokemonTypes";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 60;
@@ -229,22 +230,23 @@ const PokedexPage = () => {
               <li key={p.id} className="relative">
                 <Link
                   to={`/pokedex/${p.id}`}
-                  className="block rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.02] active:scale-95"
+                  className="block rounded-xl bg-secondary/60 hover:bg-secondary p-2 transition-all hover:scale-[1.01] active:scale-[0.99]"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <img
                       src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`}
                       alt=""
                       loading="lazy"
                       className="h-12 w-12 object-contain shrink-0"
                     />
-                    <div className="min-w-0 flex-1 pr-12">
+                    <div className="min-w-0 flex-1 pr-14">
                       <p className="text-[10px] text-muted-foreground font-mono">
                         #{String(p.id).padStart(4, "0")}
                       </p>
-                      <p className="text-xs font-display font-semibold truncate">
+                      <p className="text-sm font-display font-semibold truncate">
                         {formatName(p.name)}
                       </p>
+                      <RowTypes id={p.id} />
                     </div>
                   </div>
                 </Link>
