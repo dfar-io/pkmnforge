@@ -10,6 +10,7 @@ export interface BackupFile {
   exportedAt: number;
   builds: PokemonBuild[];
   savedTeams: SavedTeam[];
+  favorites: number[];
 }
 
 const isBuild = (v: unknown): v is PokemonBuild => {
@@ -58,8 +59,9 @@ const isSavedTeam = (v: unknown): v is SavedTeam => {
 export interface ParsedBackup {
   builds: PokemonBuild[];
   savedTeams: SavedTeam[];
+  favorites: number[];
   /** Items present in the file but rejected by validation. */
-  skipped: { builds: number; savedTeams: number };
+  skipped: { builds: number; savedTeams: number; favorites: number };
 }
 
 export const parseBackup = (text: string): ParsedBackup => {
@@ -80,14 +82,20 @@ export const parseBackup = (text: string): ParsedBackup => {
   }
   const rawBuilds = Array.isArray(data.builds) ? data.builds : [];
   const rawTeams = Array.isArray(data.savedTeams) ? data.savedTeams : [];
+  const rawFavs = Array.isArray(data.favorites) ? data.favorites : [];
   const builds = rawBuilds.filter(isBuild) as PokemonBuild[];
   const savedTeams = rawTeams.filter(isSavedTeam) as SavedTeam[];
+  const favorites = Array.from(
+    new Set(rawFavs.filter((n: unknown): n is number => Number.isInteger(n) && (n as number) > 0)),
+  );
   return {
     builds,
     savedTeams,
+    favorites,
     skipped: {
       builds: rawBuilds.length - builds.length,
       savedTeams: rawTeams.length - savedTeams.length,
+      favorites: rawFavs.length - favorites.length,
     },
   };
 };
@@ -95,12 +103,14 @@ export const parseBackup = (text: string): ParsedBackup => {
 export const buildBackup = (
   builds: PokemonBuild[],
   savedTeams: SavedTeam[],
+  favorites: number[],
 ): BackupFile => ({
   app: BACKUP_APP,
   version: BACKUP_VERSION,
   exportedAt: Date.now(),
   builds,
   savedTeams,
+  favorites,
 });
 
 /** Merge strategy: keep both, dedupe by id (incoming wins on id collision). */
