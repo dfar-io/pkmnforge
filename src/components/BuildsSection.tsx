@@ -101,7 +101,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   };
 
   return (
-    <section>
+    <section id="builds" className="scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground">
           Builds <span className="opacity-60">({builds.length})</span>
