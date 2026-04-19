@@ -348,8 +348,7 @@ const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd 
   );
 };
 
-const RowTypes = ({ id }: { id: number }) => {
-  const types = usePokemonTypes(id);
+const RowTypes = ({ types }: { types: PokemonType[] | null }) => {
   if (!types || types.length === 0) {
     return <div className="mt-1 h-4" aria-hidden />;
   }
