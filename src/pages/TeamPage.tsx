@@ -21,7 +21,7 @@ const TeamPage = () => {
 
   const goToPokedex = () => {
     if (isFull) return;
-    navigate("/pokedex");
+    navigate("/pokedex", { state: { focusSearch: true } });
   };
 
   const handleRemove = (slot: number) => {
