@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, X, Loader2, Star, Plus, Check } from "lucide-react";
+import { Search, X, Loader2, Star, ChevronRight, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
-  fetchPokemonDetail,
   fetchPokemonIdsByType,
   fetchPokemonList,
   formatName,
@@ -15,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { usePokemonTypes } from "@/hooks/usePokemonTypes";
-import { toast } from "sonner";
+import { useBuilds } from "@/hooks/useBuilds";
 
 const PAGE_SIZE = 60;
 
@@ -27,15 +26,18 @@ const PokedexPage = () => {
   const [typeIdsMap, setTypeIdsMap] = useState<Record<string, Set<number>>>({});
   const [typeLoading, setTypeLoading] = useState(false);
   const [matchMode, setMatchMode] = useState<"any" | "all">("any");
-  const [adding, setAdding] = useState<number | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { team, setTeam } = useTeamContext();
+  const { team } = useTeamContext();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const teamIds = useMemo(() => new Set(team.map((p) => p.id)), [team]);
+  const { getForPokemon } = useBuilds();
+  const teamPokemonIds = useMemo(
+    () => new Set(team.map((m) => m.pokemonId)),
+    [team],
+  );
   const isFull = team.length >= TEAM_SIZE;
 
   useEffect(() => {
@@ -112,21 +114,6 @@ const PokedexPage = () => {
     return () => io.disconnect();
   }, [filtered.length, visibleCount]);
 
-  const handleAdd = async (id: number, name: string) => {
-    if (isFull || teamIds.has(id)) return;
-    setAdding(id);
-    try {
-      const detail = await fetchPokemonDetail(id);
-      setTeam((prev) => (prev.length >= TEAM_SIZE ? prev : [...prev, detail]));
-      toast.success(`${formatName(name)} added to team`);
-    } catch (e) {
-      console.error(e);
-      toast.error("Couldn't add Pokémon");
-    } finally {
-      setAdding(null);
-    }
-  };
-
   const visible = filtered.slice(0, visibleCount);
 
   return (
@@ -134,7 +121,7 @@ const PokedexPage = () => {
       <div>
         <h2 className="font-display text-lg font-extrabold tracking-tight">Pokédex</h2>
         <p className="text-[11px] text-muted-foreground">
-          Browse all {list.length || 1025} Pokémon. Tap a card for details.
+          Browse all {list.length || 1025} Pokémon. Tap one to manage builds.
         </p>
       </div>
 
@@ -225,7 +212,8 @@ const PokedexPage = () => {
         <ul className="flex flex-col gap-2">
           {visible.map((p) => {
             const fav = isFavorite(p.id);
-            const inTeam = teamIds.has(p.id);
+            const inTeam = teamPokemonIds.has(p.id);
+            const buildCount = getForPokemon(p.id).length;
             return (
               <PokedexRow
                 key={p.id}
@@ -233,10 +221,9 @@ const PokedexPage = () => {
                 name={p.name}
                 fav={fav}
                 inTeam={inTeam}
+                buildCount={buildCount}
                 isFull={isFull}
-                adding={adding === p.id}
                 onToggleFav={() => toggleFavorite(p.id)}
-                onAdd={() => handleAdd(p.id, p.name)}
               />
             );
           })}
@@ -252,13 +239,12 @@ interface PokedexRowProps {
   name: string;
   fav: boolean;
   inTeam: boolean;
+  buildCount: number;
   isFull: boolean;
-  adding: boolean;
   onToggleFav: () => void;
-  onAdd: () => void;
 }
 
-const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd }: PokedexRowProps) => {
+const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, onToggleFav }: PokedexRowProps) => {
   const types = usePokemonTypes(id);
   const primary = types?.[0];
   return (
@@ -289,7 +275,7 @@ const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd 
             loading="lazy"
             className="h-12 w-12 object-contain shrink-0"
           />
-          <div className="min-w-0 flex-1 pr-14">
+          <div className="min-w-0 flex-1 pr-20">
             <p className="text-[10px] text-muted-foreground font-mono">
               #{String(id).padStart(4, "0")}
             </p>
@@ -318,31 +304,22 @@ const PokedexRow = ({ id, name, fav, inTeam, isFull, adding, onToggleFav, onAdd 
         >
           <Star className={cn("h-3.5 w-3.5", fav && "fill-current")} />
         </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            onAdd();
-          }}
-          disabled={inTeam || isFull || adding}
-          aria-label={inTeam ? "Already in team" : "Add to team"}
-          className={cn(
-            "grid place-items-center h-7 w-7 rounded-full transition-colors",
-            inTeam
-              ? "text-success"
-              : isFull
-                ? "text-muted-foreground/30 cursor-not-allowed"
-                : "text-muted-foreground/60 hover:text-primary",
-          )}
-        >
-          {adding ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : inTeam ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-        </button>
+        {buildCount > 0 && (
+          <span
+            className={cn(
+              "rounded-full px-1.5 py-0.5 text-[10px] font-display font-bold uppercase tracking-wide",
+              inTeam
+                ? "bg-success/15 text-success"
+                : "bg-primary/15 text-primary",
+            )}
+            title={`${buildCount} build${buildCount === 1 ? "" : "s"}`}
+          >
+            {inTeam && <Check className="inline h-2.5 w-2.5 mr-0.5" />}
+            {buildCount}
+          </span>
+        )}
+        <ChevronRight className="h-4 w-4 text-muted-foreground/60" />
+        {isFull && !inTeam && <span className="sr-only">team full</span>}
       </div>
     </li>
   );
