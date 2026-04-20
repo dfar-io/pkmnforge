@@ -63,7 +63,14 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           score -= t.weakCount;
         }
       }
-      return { type: candidate, resists, immunes, addsWeakness, score };
+      // Collect ALL types this candidate is weak to, not just existing threats
+      const allWeaknesses: PokemonType[] = [];
+      for (const atk of POKEMON_TYPES) {
+        if (classify(getMultiplier(atk, [candidate])) === "weak") {
+          allWeaknesses.push(atk);
+        }
+      }
+      return { type: candidate, resists, immunes, addsWeakness: allWeaknesses, score };
     })
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
