@@ -67,7 +67,7 @@ export const TeamGrid = ({
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={team.map(slotKey)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 gap-2.5">
           {Array.from({ length: teamSize }).map((_, i) => {
             const member = team[i];
             if (!member) {
