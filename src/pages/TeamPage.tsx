@@ -4,7 +4,6 @@ import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { OffensiveCoverage } from "@/components/OffensiveCoverage";
 import { SuggestTypes } from "@/components/SuggestTypes";
 import { TeamGrid } from "@/components/TeamGrid";
-import { SavedTeamsMenu } from "@/components/SavedTeamsMenu";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
 
@@ -28,21 +27,7 @@ const TeamPage = () => {
   return (
     <>
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="sr-only">Your Team</h2>
-          <SavedTeamsMenu
-            team={pokemonOnly}
-            onLoad={(members) =>
-              setTeam(
-                members.slice(0, TEAM_SIZE).map((p) => ({
-                  pokemonId: p.id,
-                  buildId: "",
-                  pokemon: p,
-                })),
-              )
-            }
-          />
-        </div>
+        <h2 className="sr-only">Your Team</h2>
         <TeamGrid
           team={team}
           teamSize={TEAM_SIZE}
