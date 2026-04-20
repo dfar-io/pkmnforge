@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ChevronDown, Shield, ShieldOff } from "lucide-react";
+import { X } from "lucide-react";
 import {
   POKEMON_TYPES,
   TYPE_LABEL,
@@ -24,10 +25,11 @@ interface TypeRow {
   weakCount: number;
   resistCount: number;
   weakMembers: PokemonDetail[];
+  resistMembers: PokemonDetail[];
   idx: number;
 }
 
-export const TeamAnalysis = ({ team }: AnalysisProps) => {
+export const TeamAnalysis = ({ team, onRemove }: AnalysisProps & { onRemove?: (pokemonId: number) => void }) => {
   const [expandedType, setExpandedType] = useState<PokemonType | null>(null);
   const { getById } = useBuilds();
   const rows = useMemo<TypeRow[]>(() => {
@@ -44,6 +46,7 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
       let weak = 0;
       let resist = 0;
       const weakMembers: PokemonDetail[] = [];
+      const resistMembers: PokemonDetail[] = [];
       for (const { member, mults } of memberMaps) {
         const eff = classify(mults.get(attacker) ?? 1);
         if (eff === "weak") {
@@ -51,9 +54,10 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
           weakMembers.push(member.pokemon);
         } else if (eff === "resist" || eff === "immune") {
           resist++;
+          resistMembers.push(member.pokemon);
         }
       }
-      return { type: attacker, weakCount: weak, resistCount: resist, weakMembers, idx };
+      return { type: attacker, weakCount: weak, resistCount: resist, weakMembers, resistMembers, idx };
     }).sort((a, b) => {
       if (b.weakCount !== a.weakCount) return b.weakCount - a.weakCount;
       if (a.resistCount !== b.resistCount) return a.resistCount - b.resistCount;
@@ -144,6 +148,7 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
               onToggle={() =>
                 setExpandedType((cur) => (cur === row.type ? null : row.type))
               }
+              onRemoveMember={onRemove}
             />
           ))}
         </ul>
@@ -165,11 +170,13 @@ const CoverageRow = ({
   teamSize,
   expanded,
   onToggle,
+  onRemoveMember,
 }: {
   row: TypeRow;
   teamSize: number;
   expanded: boolean;
   onToggle: () => void;
+  onRemoveMember?: (pokemonId: number) => void;
 }) => {
   const danger = row.weakCount >= 3;
   const matchups = useMemo(() => getOffensiveMatchups(row.type), [row.type]);
@@ -242,12 +249,62 @@ const CoverageRow = ({
             className="overflow-hidden"
           >
             <div className="px-3 pb-3 pt-1 space-y-2">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                {TYPE_LABEL[row.type]} attacks vs. defending types
-              </p>
-              <MatchupGroup label="Super effective" tone="weak" types={matchups.superEffective} />
-              <MatchupGroup label="Resisted" tone="resist" types={matchups.resisted} />
-              <MatchupGroup label="No effect" tone="immune" types={matchups.immune} />
+              {/* Team members weak to this type */}
+              {row.weakMembers.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-display font-bold uppercase tracking-wider text-destructive mb-1">
+                    Weak
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {row.weakMembers.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveMember?.(m.id);
+                        }}
+                        className="group flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 pl-0.5 pr-2 py-0.5 text-[11px] font-medium transition-colors hover:bg-destructive/25"
+                        title={`Remove ${formatName(m.name)} from team`}
+                      >
+                        <img src={m.sprite} alt={formatName(m.name)} className="h-5 w-5 object-contain" loading="lazy" />
+                        <span className="text-foreground">{formatName(m.name)}</span>
+                        <X className="h-3 w-3 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Team members that resist this type */}
+              {row.resistMembers.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-display font-bold uppercase tracking-wider text-success mb-1">
+                    Resists
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {row.resistMembers.map((m) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center gap-1 rounded-full bg-success/15 border border-success/30 pl-0.5 pr-2 py-0.5 text-[11px] font-medium"
+                      >
+                        <img src={m.sprite} alt={formatName(m.name)} className="h-5 w-5 object-contain" loading="lazy" />
+                        <span className="text-foreground">{formatName(m.name)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Offensive matchups */}
+              <div className="pt-1 border-t border-border">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                  {TYPE_LABEL[row.type]} attacks vs. defending types
+                </p>
+                <MatchupGroup label="Super effective" tone="weak" types={matchups.superEffective} />
+                <MatchupGroup label="Resisted" tone="resist" types={matchups.resisted} />
+                <MatchupGroup label="No effect" tone="immune" types={matchups.immune} />
+              </div>
             </div>
           </motion.div>
         )}
