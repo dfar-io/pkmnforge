@@ -5,6 +5,7 @@ import { GripVertical, X } from "lucide-react";
 import { TypeBadge } from "@/components/TypeBadge";
 import { BuildDetailsPopover } from "@/components/team/BuildDetailsPopover";
 import { formatName } from "@/lib/pokeapi";
+import { getNatureById } from "@/lib/natures";
 import type { PokemonBuild, TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,9 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
     transition,
   };
 
+  const nature = getNatureById(build?.natureId);
+  const moves = (build?.moves ?? []).filter(Boolean);
+
   return (
     <motion.div
       ref={setNodeRef}
@@ -37,7 +41,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className={cn(
-        "relative aspect-[4/3] rounded-2xl bg-gradient-card shadow-card overflow-hidden touch-none",
+        "relative rounded-2xl bg-gradient-card shadow-card overflow-hidden touch-none",
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
@@ -60,24 +64,47 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <img
-        src={member.pokemon.sprite}
-        alt={member.pokemon.name}
-        className="absolute inset-0 h-full w-full object-contain p-1 drop-shadow-lg pointer-events-none opacity-70"
-        loading="lazy"
-      />
-
-      <div className="absolute bottom-0 inset-x-0 px-1 pb-1.5 pt-3 bg-gradient-to-t from-background via-background/90 to-transparent pointer-events-none">
-        <p className="truncate text-[11px] font-display font-bold text-center text-foreground [text-shadow:0_1px_2px_hsl(var(--background))]">
-          {formatName(member.pokemon.name)}
-        </p>
-        <p className="truncate text-[9px] text-center text-muted-foreground italic">
-          {buildName}
-        </p>
-        <div className="flex items-center justify-center gap-1 mt-1">
-          {member.pokemon.types.map((t) => (
-            <TypeBadge key={t} type={t} size="sm" />
-          ))}
+      <div className="relative flex items-stretch gap-2 p-2 pl-8 pr-8 min-h-[96px]">
+        <img
+          src={member.pokemon.sprite}
+          alt={member.pokemon.name}
+          className="h-20 w-20 shrink-0 object-contain drop-shadow-lg pointer-events-none"
+          loading="lazy"
+        />
+        <div className="min-w-0 flex-1 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="truncate text-sm font-display font-bold text-foreground">
+              {formatName(member.pokemon.name)}
+            </p>
+            <div className="flex items-center gap-1 shrink-0">
+              {member.pokemon.types.map((t) => (
+                <TypeBadge key={t} type={t} size="sm" />
+              ))}
+            </div>
+          </div>
+          <p className="truncate text-[10px] text-muted-foreground italic">
+            {buildName}
+          </p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-[10px] leading-tight">
+            <span className="text-muted-foreground">Ability</span>
+            <span className="truncate font-medium">{build?.ability ? formatName(build.ability) : "—"}</span>
+            <span className="text-muted-foreground">Item</span>
+            <span className="truncate font-medium">{build?.item ? formatName(build.item) : "—"}</span>
+            <span className="text-muted-foreground">Nature</span>
+            <span className="truncate font-medium">
+              {nature ? `${nature.name} (+${nature.up.toUpperCase()}/−${nature.down.toUpperCase()})` : "—"}
+            </span>
+          </div>
+          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] mt-0.5">
+            {[0, 1, 2, 3].map((i) => {
+              const m = moves[i];
+              return (
+                <li key={i} className="truncate text-foreground/90">
+                  {m ? `• ${formatName(m)}` : <span className="text-muted-foreground/60">• —</span>}
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
 
