@@ -45,7 +45,15 @@ const TeamPage = () => {
       </section>
 
       <section>
-        <TeamAnalysis team={team} />
+        <TeamAnalysis
+          team={team}
+          onRemove={(pokemonId) =>
+            setTeam((prev) => {
+              const idx = prev.findIndex((m) => m.pokemon.id === pokemonId);
+              return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
+            })
+          }
+        />
       </section>
 
       <section>
