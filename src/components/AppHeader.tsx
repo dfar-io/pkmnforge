@@ -1,6 +1,8 @@
 import logo from "@/assets/logo.png";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { HeaderActions } from "@/components/HeaderActions";
+import { SavedTeamsMenu } from "@/components/SavedTeamsMenu";
+import { useSavedTeams } from "@/hooks/useSavedTeams";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -21,6 +23,11 @@ export const AppHeader = () => {
   const { team, setTeam } = useTeamContext();
   const [justCopied, setJustCopied] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [loadOpen, setLoadOpen] = useState(false);
+  const { pathname } = useLocation();
+  const { teams } = useSavedTeams();
+  const onTeamsPage = pathname === "/";
 
   const pokemonForActions = team.map((m) => m.pokemon);
 
@@ -90,8 +97,37 @@ export const AppHeader = () => {
           onShare={handleShare}
           onClear={handleClear}
           justCopied={justCopied}
+          showSaveLoad={onTeamsPage}
+          onSave={() => {
+            if (team.length === 0) {
+              toast.error("Build a team first");
+              return;
+            }
+            setSaveOpen(true);
+          }}
+          onLoad={() => setLoadOpen(true)}
+          savedCount={teams.length}
         />
       </div>
+      {onTeamsPage && (
+        <SavedTeamsMenu
+          team={pokemonForActions}
+          onLoad={(members) =>
+            setTeam(
+              members.slice(0, TEAM_SIZE).map((p) => ({
+                pokemonId: p.id,
+                buildId: "",
+                pokemon: p,
+              })),
+            )
+          }
+          hideTriggers
+          saveOpen={saveOpen}
+          onSaveOpenChange={setSaveOpen}
+          loadOpen={loadOpen}
+          onLoadOpenChange={setLoadOpen}
+        />
+      )}
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
