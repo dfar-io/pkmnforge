@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Lightbulb, Shield } from "lucide-react";
 import {
@@ -8,7 +8,7 @@ import {
   getMultiplier,
   type PokemonType,
 } from "@/lib/pokemon-types";
-import type { PokemonDetail } from "@/lib/pokeapi";
+import { fetchPokemonIdsByType, type PokemonDetail } from "@/lib/pokeapi";
 import { cn } from "@/lib/utils";
 
 interface SuggestTypesProps {
@@ -28,6 +28,42 @@ interface TypeSuggestion {
 
 const TOP_N = 5;
 
+/** Check which dual-type combos actually exist (have ≥1 Pokémon with both types). */
+function useValidDualTypes(combos: PokemonType[][]) {
+  const [valid, setValid] = useState<Set<string> | null>(null);
+
+  // Unique types needed
+  const typesNeeded = useMemo(() => {
+    const s = new Set<PokemonType>();
+    for (const c of combos) if (c.length === 2) { s.add(c[0]); s.add(c[1]); }
+    return Array.from(s);
+  }, [combos]);
+
+  useEffect(() => {
+    if (typesNeeded.length === 0) { setValid(new Set()); return; }
+    let cancelled = false;
+    Promise.all(typesNeeded.map((t) => fetchPokemonIdsByType(t).then((ids) => [t, ids] as const)))
+      .then((entries) => {
+        if (cancelled) return;
+        const map = new Map<PokemonType, Set<number>>(entries);
+        const validSet = new Set<string>();
+        for (const c of combos) {
+          if (c.length === 1) { validSet.add(c[0]); continue; }
+          const a = map.get(c[0]);
+          const b = map.get(c[1]);
+          if (a && b) {
+            for (const id of a) { if (b.has(id)) { validSet.add(c.join("+")); break; } }
+          }
+        }
+        setValid(validSet);
+      })
+      .catch(console.error);
+    return () => { cancelled = true; };
+  }, [combos, typesNeeded]);
+
+  return valid;
+}
+
 export const SuggestTypes = ({ team }: SuggestTypesProps) => {
   const navigate = useNavigate();
   // Top threat types: those at least one team member is weak to, weighted by
@@ -44,19 +80,31 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
       .sort((a, b) => b.weakCount - a.weakCount);
   }, [team]);
 
-  const suggestions = useMemo<TypeSuggestion[]>(() => {
-    if (threats.length === 0) return [];
-
-    // Build all single + dual type combos
-    const combos: PokemonType[][] = [];
+  // Build all single + dual type combos (stable reference)
+  const combos = useMemo(() => {
+    const result: PokemonType[][] = [];
     for (const t of POKEMON_TYPES) combos.push([t]);
     for (let i = 0; i < POKEMON_TYPES.length; i++) {
       for (let j = i + 1; j < POKEMON_TYPES.length; j++) {
-        combos.push([POKEMON_TYPES[i], POKEMON_TYPES[j]]);
+        result.push([POKEMON_TYPES[i], POKEMON_TYPES[j]]);
       }
     }
+    // Add singles at the start
+    for (const t of POKEMON_TYPES) result.unshift([t]);
+    return result;
+  }, []);
 
-    return combos.map((candidate) => {
+  const validDualTypes = useValidDualTypes(combos);
+
+  const suggestions = useMemo<TypeSuggestion[]>(() => {
+    if (threats.length === 0 || !validDualTypes) return [];
+
+    return combos
+      .filter((c) => {
+        const key = c.length === 1 ? c[0] : c.join("+");
+        return validDualTypes.has(key);
+      })
+      .map((candidate) => {
       const resists: PokemonType[] = [];
       const immunes: PokemonType[] = [];
       let score = 0;
@@ -84,7 +132,7 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, TOP_N);
-  }, [threats]);
+  }, [threats, combos, validDualTypes]);
 
   if (team.length === 0) return null;
 
