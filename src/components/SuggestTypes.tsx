@@ -83,14 +83,12 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
   // Build all single + dual type combos (stable reference)
   const combos = useMemo(() => {
     const result: PokemonType[][] = [];
-    for (const t of POKEMON_TYPES) combos.push([t]);
+    for (const t of POKEMON_TYPES) result.push([t]);
     for (let i = 0; i < POKEMON_TYPES.length; i++) {
       for (let j = i + 1; j < POKEMON_TYPES.length; j++) {
         result.push([POKEMON_TYPES[i], POKEMON_TYPES[j]]);
       }
     }
-    // Add singles at the start
-    for (const t of POKEMON_TYPES) result.unshift([t]);
     return result;
   }, []);
 
