@@ -81,6 +81,9 @@ const PokedexPage = () => {
     if (!state?.focusSearch && !state?.initialTypes) return;
     if (state.initialTypes && state.initialTypes.length > 0) {
       setActiveTypes(state.initialTypes);
+      if (state.initialTypes.length > 1) {
+        setMatchMode("all");
+      }
     }
     window.scrollTo({ top: 0, behavior: "auto" });
     let timeoutId: number | undefined;
