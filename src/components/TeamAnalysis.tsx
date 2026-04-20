@@ -10,10 +10,13 @@ import {
   type PokemonType,
 } from "@/lib/pokemon-types";
 import { formatName, type PokemonDetail } from "@/lib/pokeapi";
+import { applyAbility } from "@/lib/ability-defense";
+import { useBuilds } from "@/hooks/useBuilds";
+import type { TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
 
 interface AnalysisProps {
-  team: PokemonDetail[];
+  team: TeamMember[];
 }
 
 interface TypeRow {
@@ -26,16 +29,26 @@ interface TypeRow {
 
 export const TeamAnalysis = ({ team }: AnalysisProps) => {
   const [expandedType, setExpandedType] = useState<PokemonType | null>(null);
+  const { getById } = useBuilds();
   const rows = useMemo<TypeRow[]>(() => {
+    // Pre-compute each member's effective per-attacker multiplier map,
+    // applying the selected build's ability if any.
+    const memberMaps = team.map((m) => {
+      const ability = getById(m.buildId)?.ability ?? null;
+      const base = new Map<PokemonType, number>(
+        POKEMON_TYPES.map((atk) => [atk, getMultiplier(atk, m.pokemon.types)]),
+      );
+      return { member: m, mults: applyAbility(base, ability) };
+    });
     return POKEMON_TYPES.map((attacker, idx) => {
       let weak = 0;
       let resist = 0;
       const weakMembers: PokemonDetail[] = [];
-      for (const member of team) {
-        const eff = classify(getMultiplier(attacker, member.types));
+      for (const { member, mults } of memberMaps) {
+        const eff = classify(mults.get(attacker) ?? 1);
         if (eff === "weak") {
           weak++;
-          weakMembers.push(member);
+          weakMembers.push(member.pokemon);
         } else if (eff === "resist" || eff === "immune") {
           resist++;
         }
@@ -46,7 +59,7 @@ export const TeamAnalysis = ({ team }: AnalysisProps) => {
       if (a.resistCount !== b.resistCount) return a.resistCount - b.resistCount;
       return a.idx - b.idx;
     });
-  }, [team]);
+  }, [team, getById]);
 
   const dangers = rows.filter((r) => r.weakCount >= 3);
 
