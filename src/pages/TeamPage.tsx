@@ -45,7 +45,7 @@ const TeamPage = () => {
       </section>
 
       <section>
-        <TeamAnalysis team={pokemonOnly} />
+        <TeamAnalysis team={team} />
       </section>
 
       <section>
