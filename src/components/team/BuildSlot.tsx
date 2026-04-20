@@ -3,7 +3,6 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { GripVertical, X } from "lucide-react";
 import { TypeBadge } from "@/components/TypeBadge";
-import { BuildDetailsPopover } from "@/components/team/BuildDetailsPopover";
 import { formatName } from "@/lib/pokeapi";
 import { getNatureById } from "@/lib/natures";
 import type { PokemonBuild, TeamMember } from "@/lib/builds";
@@ -45,8 +44,6 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
-      <BuildDetailsPopover build={build} pokemonId={member.pokemonId} pokemonName={member.pokemon.name} />
-
       <button
         onClick={onRemove}
         className="absolute top-1 right-1 z-20 grid h-6 w-6 place-items-center rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors"
