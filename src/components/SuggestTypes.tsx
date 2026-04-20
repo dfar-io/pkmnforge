@@ -16,16 +16,17 @@ interface SuggestTypesProps {
 }
 
 interface TypeSuggestion {
-  type: PokemonType;
-  // Threat types this defending type resists or is immune to.
+  types: PokemonType[]; // 1 or 2 types
+  label: string;
+  // Threat types this defending type combo resists or is immune to.
   resists: PokemonType[];
   immunes: PokemonType[];
-  // Threat types it would *add* (i.e. it's weak to those threats).
+  // ALL types this combo is weak to.
   addsWeakness: PokemonType[];
   score: number;
 }
 
-const TOP_N = 4;
+const TOP_N = 5;
 
 export const SuggestTypes = ({ team }: SuggestTypesProps) => {
   const navigate = useNavigate();
@@ -45,13 +46,22 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
 
   const suggestions = useMemo<TypeSuggestion[]>(() => {
     if (threats.length === 0) return [];
-    return POKEMON_TYPES.map((candidate) => {
+
+    // Build all single + dual type combos
+    const combos: PokemonType[][] = [];
+    for (const t of POKEMON_TYPES) combos.push([t]);
+    for (let i = 0; i < POKEMON_TYPES.length; i++) {
+      for (let j = i + 1; j < POKEMON_TYPES.length; j++) {
+        combos.push([POKEMON_TYPES[i], POKEMON_TYPES[j]]);
+      }
+    }
+
+    return combos.map((candidate) => {
       const resists: PokemonType[] = [];
       const immunes: PokemonType[] = [];
-      const addsWeakness: PokemonType[] = [];
       let score = 0;
       for (const t of threats) {
-        const eff = classify(getMultiplier(t.type, [candidate]));
+        const eff = classify(getMultiplier(t.type, candidate));
         if (eff === "immune") {
           immunes.push(t.type);
           score += t.weakCount * 1.6;
@@ -59,18 +69,17 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           resists.push(t.type);
           score += t.weakCount;
         } else if (eff === "weak") {
-          addsWeakness.push(t.type);
           score -= t.weakCount;
         }
       }
-      // Collect ALL types this candidate is weak to, not just existing threats
       const allWeaknesses: PokemonType[] = [];
       for (const atk of POKEMON_TYPES) {
-        if (classify(getMultiplier(atk, [candidate])) === "weak") {
+        if (classify(getMultiplier(atk, candidate)) === "weak") {
           allWeaknesses.push(atk);
         }
       }
-      return { type: candidate, resists, immunes, addsWeakness: allWeaknesses, score };
+      const label = candidate.map((t) => TYPE_LABEL[t]).join(" / ");
+      return { types: candidate, label, resists, immunes, addsWeakness: allWeaknesses, score };
     })
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
@@ -107,23 +116,26 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
         <ul className="space-y-2">
           {suggestions.map((s) => (
             <li
-              key={s.type}
+              key={s.label}
               className="rounded-xl bg-secondary/60 p-2.5 space-y-1.5"
             >
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    navigate("/pokedex", { state: { initialTypes: [s.type] } })
-                  }
-                  className={cn(
-                    "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    `bg-type-${s.type}`,
-                  )}
-                  aria-label={`Browse ${TYPE_LABEL[s.type]} type Pokémon`}
-                >
-                  {TYPE_LABEL[s.type]}
-                </button>
+                {s.types.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() =>
+                      navigate("/pokedex", { state: { initialTypes: s.types } })
+                    }
+                    className={cn(
+                      "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground transition-transform hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      `bg-type-${t}`,
+                    )}
+                    aria-label={`Browse ${s.label} type Pokémon`}
+                  >
+                    {TYPE_LABEL[t]}
+                  </button>
+                ))}
                 <span className="text-[10px] text-muted-foreground inline-flex items-center gap-1">
                   <Shield className="h-3 w-3" />
                   Score {Math.round(s.score * 10) / 10}
