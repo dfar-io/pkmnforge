@@ -123,6 +123,19 @@ const PokemonDetailPage = () => {
         </div>
       </div>
 
+      <a
+        href={`https://www.smogon.com/dex/sv/pokemon/${encodeURIComponent(detail.name.toLowerCase())}/`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5 text-sm font-medium transition-all hover:border-primary hover:bg-card"
+      >
+        <span className="flex items-center gap-2">
+          <ExternalLink className="h-4 w-4 text-primary" />
+          View on Smogon
+        </span>
+        <span className="text-xs text-muted-foreground">smogon.com ↗</span>
+      </a>
+
       <BuildsSection pokemon={detail} />
 
       <section>
@@ -199,19 +212,6 @@ const PokemonDetailPage = () => {
           <EvolutionRow node={evo} />
         </section>
       )}
-
-      <a
-        href={`https://www.smogon.com/dex/sv/pokemon/${encodeURIComponent(detail.name.toLowerCase())}/`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card/60 px-3 py-2.5 text-sm font-medium transition-all hover:border-primary hover:bg-card"
-      >
-        <span className="flex items-center gap-2">
-          <ExternalLink className="h-4 w-4 text-primary" />
-          View on Smogon
-        </span>
-        <span className="text-xs text-muted-foreground">smogon.com ↗</span>
-      </a>
     </div>
   );
 };
