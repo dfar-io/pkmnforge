@@ -164,6 +164,7 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           No type cleanly covers your current weakness profile.
         </p>
       ) : (
+        <>
         <ul className="space-y-2">
           {visible.map((s) => (
             <li
@@ -237,6 +238,7 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
             )}
           </button>
         )}
+        </>
         </>
       )}
     </div>
