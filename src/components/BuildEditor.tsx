@@ -166,26 +166,6 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          Moves <span className="opacity-60 normal-case tracking-normal">(drag to reorder)</span>
-        </Label>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={moveRows.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
-              {moveRows.map((row, i) => (
-                <SortableMoveRow
-                  key={row.id}
-                  row={row}
-                  index={i}
-                  options={moveOptions}
-                  onChange={(v) => setRowValue(row.id, v)}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </div>
 
       <div>
         <Label htmlFor="build-notes" className="text-[11px] uppercase tracking-wider text-muted-foreground">
