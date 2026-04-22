@@ -197,24 +197,6 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <h3 className="font-display font-bold text-sm truncate">{b.name}</h3>
-                  <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-muted-foreground">
-                    {b.ability && (
-                      <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
-                        {formatName(b.ability)}
-                      </span>
-                    )}
-                    {b.item && (
-                      <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
-                        @ {formatName(b.item)}
-                      </span>
-                    )}
-                    {nature && (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-primary">
-                        <Sparkles className="h-2.5 w-2.5" />
-                        {nature.name}
-                      </span>
-                    )}
-                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -264,6 +246,25 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                   ))}
                 </ul>
               )}
+
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                {b.item && (
+                  <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
+                    @ {formatName(b.item)}
+                  </span>
+                )}
+                {b.ability && (
+                  <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
+                    {formatName(b.ability)}
+                  </span>
+                )}
+                {nature && (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-primary">
+                    <Sparkles className="h-2.5 w-2.5" />
+                    {nature.name}
+                  </span>
+                )}
+              </div>
 
               {b.notes && (
                 <p className="text-[11px] text-muted-foreground whitespace-pre-wrap">

@@ -49,8 +49,20 @@ export const BuildDetailsPopover = ({ build, pokemonId, pokemonName }: BuildDeta
               <p className="font-display font-bold text-sm truncate">{build.name || "Unnamed build"}</p>
             </div>
             <dl className="space-y-1">
-              <Row label="Ability" value={build.ability ? formatName(build.ability) : "—"} />
+              <div>
+                <p className="text-muted-foreground mb-1">Moves</p>
+                {moves.length === 0 ? (
+                  <p className="italic text-muted-foreground">No moves set.</p>
+                ) : (
+                  <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                    {moves.map((m, i) => (
+                      <li key={i} className="truncate">• {formatName(m)}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
               <Row label="Item" value={build.item ? formatName(build.item) : "—"} />
+              <Row label="Ability" value={build.ability ? formatName(build.ability) : "—"} />
               <Row
                 label="Nature"
                 value={
@@ -60,18 +72,6 @@ export const BuildDetailsPopover = ({ build, pokemonId, pokemonName }: BuildDeta
                 }
               />
             </dl>
-            <div>
-              <p className="text-muted-foreground mb-1">Moves</p>
-              {moves.length === 0 ? (
-                <p className="italic text-muted-foreground">No moves set.</p>
-              ) : (
-                <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-                  {moves.map((m, i) => (
-                    <li key={i} className="truncate">• {formatName(m)}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
             {build.notes && (
               <div>
                 <p className="text-muted-foreground mb-1">Notes</p>
