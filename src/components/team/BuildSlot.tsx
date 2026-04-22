@@ -82,7 +82,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           </div>
 
           {/* Row 2: build name */}
-          <p className="truncate text-[11px] font-display font-semibold text-primary leading-none">{buildName}</p>
+          <p className="truncate text-sm font-display font-semibold text-primary leading-none">{buildName}</p>
 
           {/* Row 3: moves */}
           <div className="flex flex-col gap-px min-w-0">
