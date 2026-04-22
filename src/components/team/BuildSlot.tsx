@@ -100,7 +100,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
 
           {/* Row 3: item, ability, nature */}
           {(build?.item || build?.ability || nature) && (
-            <div className="flex items-center gap-1 min-w-0 flex-wrap mt-0.5">
+            <div className="flex flex-col gap-0.5 items-start min-w-0 mt-0.5">
               {build?.item && (
                 <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
                   @ {formatName(build.item)}
