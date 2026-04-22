@@ -152,13 +152,24 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         onImport={(draft) => create(pokemon.id, draft)}
       />
 
-      {creating && (
-        <BuildEditor
-          pokemon={pokemon}
-          onSave={handleCreate}
-          onCancel={() => setCreating(false)}
-        />
-      )}
+      <BuildEditorDialog
+        pokemon={pokemon}
+        open={creating}
+        onOpenChange={setCreating}
+        onSave={handleCreate}
+      />
+
+      <BuildEditorDialog
+        pokemon={pokemon}
+        open={!!editingId}
+        onOpenChange={(open) => { if (!open) setEditingId(null); }}
+        initial={editingId ? (() => {
+          const b = builds.find((x) => x.id === editingId);
+          return b ? { name: b.name, ability: b.ability, item: b.item, natureId: b.natureId, moves: b.moves, notes: b.notes } : undefined;
+        })() : undefined}
+        onSave={(d) => { if (editingId) handleUpdate(editingId, d); }}
+        title={editingId ? `Edit build — ${formatName(pokemon.name)}` : undefined}
+      />
 
       {builds.length === 0 && !creating && (
         <p className="rounded-2xl border border-dashed border-border bg-card/30 p-4 text-center text-sm text-muted-foreground">
@@ -168,25 +179,6 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
 
       <ul className="space-y-2 mt-2">
         {builds.map((b) => {
-          if (editingId === b.id) {
-            return (
-              <li key={b.id}>
-                <BuildEditor
-                  pokemon={pokemon}
-                  initial={{
-                    name: b.name,
-                    ability: b.ability,
-                    item: b.item,
-                    natureId: b.natureId,
-                    moves: b.moves,
-                    notes: b.notes,
-                  }}
-                  onSave={(d) => handleUpdate(b.id, d)}
-                  onCancel={() => setEditingId(null)}
-                />
-              </li>
-            );
-          }
           const inTeam = buildIdsInTeam.has(b.id);
           const nature = getNatureById(b.natureId);
           return (
