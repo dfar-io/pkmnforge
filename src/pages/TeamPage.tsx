@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeamAnalysis } from "@/components/TeamAnalysis";
 import { OffensiveCoverage } from "@/components/OffensiveCoverage";
@@ -6,6 +6,7 @@ import { SuggestTypes } from "@/components/SuggestTypes";
 import { TeamGrid } from "@/components/TeamGrid";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { useBuilds } from "@/hooks/useBuilds";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const TeamPage = () => {
   const { team, setTeam } = useTeamContext();
@@ -40,25 +41,32 @@ const TeamPage = () => {
         />
       </section>
 
-      <section>
-        <SuggestTypes team={pokemonOnly} />
-      </section>
-
-      <section>
-        <TeamAnalysis
-          team={team}
-          onRemove={(pokemonId) =>
-            setTeam((prev) => {
-              const idx = prev.findIndex((m) => m.pokemon.id === pokemonId);
-              return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
-            })
-          }
-        />
-      </section>
-
-      <section>
-        <OffensiveCoverage team={team} />
-      </section>
+      {team.length > 0 && (
+        <Tabs defaultValue="suggest" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="suggest" className="flex-1">Suggested Types</TabsTrigger>
+            <TabsTrigger value="defensive" className="flex-1">Defensive</TabsTrigger>
+            <TabsTrigger value="offensive" className="flex-1">Offensive</TabsTrigger>
+          </TabsList>
+          <TabsContent value="suggest">
+            <SuggestTypes team={pokemonOnly} />
+          </TabsContent>
+          <TabsContent value="defensive">
+            <TeamAnalysis
+              team={team}
+              onRemove={(pokemonId) =>
+                setTeam((prev) => {
+                  const idx = prev.findIndex((m) => m.pokemon.id === pokemonId);
+                  return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
+                })
+              }
+            />
+          </TabsContent>
+          <TabsContent value="offensive">
+            <OffensiveCoverage team={team} />
+          </TabsContent>
+        </Tabs>
+      )}
     </>
   );
 };
