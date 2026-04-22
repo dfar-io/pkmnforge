@@ -68,8 +68,8 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           className="h-10 w-10 shrink-0 object-contain pointer-events-none"
           loading="lazy"
         />
-        <div className="min-w-0 flex-1 flex flex-col gap-1">
-          {/* Row 1: name, types, build name */}
+        <div className="min-w-0 flex-1 flex flex-col gap-0.5">
+          {/* Row 1: name + types */}
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="truncate text-xs font-display font-bold text-foreground leading-tight">
               {formatName(member.pokemon.name)}
@@ -79,14 +79,12 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
                 <TypeBadge key={t} type={t} size="sm" />
               ))}
             </div>
-            <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
-            <p className="truncate text-[11px] font-display font-semibold text-primary leading-none">
-              {buildName}
-            </p>
           </div>
 
-          {/* Row 2: moves (left) + item/ability/nature (right) */}
-          {/* Row 2: moves */}
+          {/* Row 2: build name */}
+          <p className="truncate text-[11px] font-display font-semibold text-primary leading-none">{buildName}</p>
+
+          {/* Row 3: moves */}
           <div className="flex flex-col gap-px min-w-0">
             {moves.length > 0 ? moves.map((m, i) => (
               <p key={m} className="text-[11px] text-muted-foreground leading-tight">
