@@ -102,6 +102,43 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
         />
       </div>
 
+      <div className="space-y-2">
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Moves <span className="opacity-60 normal-case tracking-normal">(drag to reorder)</span>
+        </Label>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={moveRows.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {moveRows.map((row, i) => (
+                <SortableMoveRow
+                  key={row.id}
+                  row={row}
+                  index={i}
+                  options={moveOptions}
+                  onChange={(v) => setRowValue(row.id, v)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      <div>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          Held item
+        </Label>
+        <div className="mt-1">
+          <Combobox
+            value={draft.item}
+            onChange={(v) => setDraft({ ...draft, item: v })}
+            options={items}
+            placeholder={items.length ? "Pick item" : "Loading items…"}
+            disabled={items.length === 0}
+            allowCustom
+          />
+        </div>
+      </div>
+
       <div>
         <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
           Ability
@@ -125,22 +162,6 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
             onChange={(v) => setDraft({ ...draft, natureId: v })}
             options={NATURE_OPTIONS}
             placeholder="Pick nature"
-          />
-        </div>
-      </div>
-
-      <div>
-        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
-          Held item
-        </Label>
-        <div className="mt-1">
-          <Combobox
-            value={draft.item}
-            onChange={(v) => setDraft({ ...draft, item: v })}
-            options={items}
-            placeholder={items.length ? "Pick item" : "Loading items…"}
-            disabled={items.length === 0}
-            allowCustom
           />
         </div>
       </div>
