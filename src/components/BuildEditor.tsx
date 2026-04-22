@@ -87,7 +87,7 @@ export const BuildEditor = ({ pokemon, initial, onSave, onCancel }: BuildEditorP
   const moveOptions = [...pokemon.moves].sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border bg-card/50 p-3">
+    <div className="space-y-3">
       <div>
         <Label htmlFor="build-name" className="text-[11px] uppercase tracking-wider text-muted-foreground">
           Build name
