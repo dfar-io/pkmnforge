@@ -65,8 +65,6 @@ export const TeamAnalysis = ({ team, onRemove }: AnalysisProps & { onRemove?: (p
     });
   }, [team, getById]);
 
-  const dangers = rows.filter((r) => r.weakCount >= 3);
-
   if (team.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/30 p-6 text-center">
@@ -80,57 +78,6 @@ export const TeamAnalysis = ({ team, onRemove }: AnalysisProps & { onRemove?: (p
 
   return (
     <div className="space-y-4">
-      {dangers.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-gradient-danger p-4 shadow-danger animate-pulse-danger"
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="h-5 w-5 text-destructive-foreground shrink-0 mt-0.5" />
-            <div>
-              <p className="font-display font-bold text-destructive-foreground">
-                Critical type weakness
-              </p>
-              <p className="text-xs text-destructive-foreground/90 mt-0.5">
-                {dangers.length === 1
-                  ? `${dangers.length} type has 3+ team members weak to it.`
-                  : `${dangers.length} types have 3+ team members weak to them.`}
-              </p>
-              <ul className="mt-2.5 space-y-1.5">
-                {dangers.map((d) => (
-                  <li
-                    key={d.type}
-                    className="flex items-center gap-2 rounded-lg bg-background/25 border border-destructive-foreground/20 px-2 py-1.5"
-                  >
-                    <span
-                      className={cn(
-                        "px-2 py-0.5 rounded-full text-[10px] font-display font-bold uppercase tracking-wider text-primary-foreground shrink-0",
-                        `bg-type-${d.type}`,
-                      )}
-                    >
-                      {TYPE_LABEL[d.type]} ×{d.weakCount}
-                    </span>
-                    <div className="flex -space-x-1.5 flex-1 min-w-0">
-                      {d.weakMembers.map((m) => (
-                        <img
-                          key={m.id}
-                          src={m.sprite}
-                          alt={formatName(m.name)}
-                          title={`${formatName(m.name)} is weak to ${TYPE_LABEL[d.type]}`}
-                          loading="lazy"
-                          className="h-8 w-8 rounded-full bg-background/60 ring-2 ring-destructive object-contain shrink-0"
-                        />
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
       <div className="rounded-2xl bg-card shadow-card p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-display font-bold text-base">Defensive Coverage</h2>
