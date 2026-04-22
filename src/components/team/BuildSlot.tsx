@@ -40,7 +40,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 320, damping: 22 }}
       className={cn(
-        "relative rounded-2xl bg-gradient-card shadow-card overflow-hidden touch-none",
+        "relative rounded-xl bg-gradient-card shadow-card overflow-hidden touch-none",
         isDragging && "z-30 shadow-glow scale-105 cursor-grabbing",
       )}
     >
@@ -57,7 +57,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         {...attributes}
         {...listeners}
         onClick={onOpenDetail}
-        className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-2xl"
+        className="absolute inset-0 z-10 cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
