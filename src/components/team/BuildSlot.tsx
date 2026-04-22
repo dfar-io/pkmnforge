@@ -61,17 +61,17 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <div className="relative flex items-center gap-3 px-3 py-2.5 pr-8">
+      <div className="relative flex items-center gap-2 px-2 py-2 pr-8">
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
-          className="h-12 w-12 shrink-0 object-contain pointer-events-none"
+          className="h-10 w-10 shrink-0 object-contain pointer-events-none"
           loading="lazy"
         />
         <div className="min-w-0 flex-1 flex flex-col gap-1">
           {/* Row 1: name, types, build name */}
-          <div className="flex items-center gap-1.5 min-w-0 mb-1">
-            <p className="truncate text-sm font-display font-bold text-foreground leading-tight">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <p className="truncate text-xs font-display font-bold text-foreground leading-tight">
               {formatName(member.pokemon.name)}
             </p>
             <div className="flex items-center gap-0.5 shrink-0">
@@ -79,45 +79,45 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
                 <TypeBadge key={t} type={t} size="sm" />
               ))}
             </div>
-          </div>
-
-          {/* Row 2: build name */}
-          <div className="min-w-0 mb-1.5">
-            <p className="truncate text-sm font-display font-semibold text-primary leading-none">{buildName}</p>
+            <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
+            <p className="truncate text-[11px] font-display font-semibold text-primary leading-none">
+              {buildName}
+            </p>
           </div>
 
           {/* Row 2: moves (left) + item/ability/nature (right) */}
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="flex flex-col gap-px min-w-0 shrink-0">
-              {moves.length > 0 ? moves.map((m, i) => (
+          {/* Row 2: moves */}
+          <div className="flex flex-col gap-px min-w-0">
+            {moves.length > 0 ? moves.map((m, i) => (
               <p key={m} className="text-[11px] text-muted-foreground leading-tight">
                 <span className="text-muted-foreground/50 font-mono w-3.5 inline-block">{i + 1}.</span>
-                  {formatName(m)}
-                </p>
-              )) : (
+                {formatName(m)}
+              </p>
+            )) : (
               <p className="text-[11px] text-muted-foreground/50 leading-tight">No moves</p>
-              )}
-            </div>
-            {(build?.item || build?.ability || nature) && (
-              <div className="flex flex-col gap-0.5 items-start min-w-0">
-                {build?.item && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
-                    @ {formatName(build.item)}
-                  </span>
-                )}
-                {build?.ability && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
-                    {formatName(build.ability)}
-                  </span>
-                )}
-                {nature && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary truncate">
-                    {nature.name}
-                  </span>
-                )}
-              </div>
             )}
           </div>
+
+          {/* Row 3: item, ability, nature */}
+          {(build?.item || build?.ability || nature) && (
+            <div className="flex items-center gap-1 min-w-0 flex-wrap mt-0.5">
+              {build?.item && (
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
+                  @ {formatName(build.item)}
+                </span>
+              )}
+              {build?.ability && (
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
+                  {formatName(build.ability)}
+                </span>
+              )}
+              {nature && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary truncate">
+                  {nature.name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
