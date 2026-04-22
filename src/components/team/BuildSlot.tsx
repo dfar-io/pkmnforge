@@ -82,16 +82,6 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           <p className="truncate text-[10px] text-muted-foreground italic">
             {buildName}
           </p>
-          <div className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-[10px] leading-tight">
-            <span className="text-muted-foreground">Ability</span>
-            <span className="truncate font-medium">{build?.ability ? formatName(build.ability) : "—"}</span>
-            <span className="text-muted-foreground">Item</span>
-            <span className="truncate font-medium">{build?.item ? formatName(build.item) : "—"}</span>
-            <span className="text-muted-foreground">Nature</span>
-            <span className="truncate font-medium">
-              {nature ? `${nature.name} (+${nature.up.toUpperCase()}/−${nature.down.toUpperCase()})` : "—"}
-            </span>
-          </div>
           <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] mt-0.5">
             {[0, 1, 2, 3].map((i) => {
               const m = moves[i];
@@ -102,6 +92,16 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
               );
             })}
           </ul>
+          <div className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-[10px] leading-tight">
+            <span className="text-muted-foreground">Item</span>
+            <span className="truncate font-medium">{build?.item ? formatName(build.item) : "—"}</span>
+            <span className="text-muted-foreground">Ability</span>
+            <span className="truncate font-medium">{build?.ability ? formatName(build.ability) : "—"}</span>
+            <span className="text-muted-foreground">Nature</span>
+            <span className="truncate font-medium">
+              {nature ? `${nature.name} (+${nature.up.toUpperCase()}/−${nature.down.toUpperCase()})` : "—"}
+            </span>
+          </div>
         </div>
       </div>
 
