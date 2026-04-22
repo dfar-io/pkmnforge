@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Lightbulb, Shield } from "lucide-react";
+import { ChevronDown, ChevronUp, Lightbulb, Shield } from "lucide-react";
 import {
   POKEMON_TYPES,
   TYPE_LABEL,
@@ -26,7 +26,7 @@ interface TypeSuggestion {
   score: number;
 }
 
-const TOP_N = 5;
+const PAGE_SIZE = 5;
 
 /** Check which dual-type combos actually exist (have ≥1 Pokémon with both types). */
 function useValidDualTypes(combos: PokemonType[][]) {
@@ -129,8 +129,13 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
     })
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, TOP_N);
+      ;
   }, [threats, combos, validDualTypes]);
+
+  const [showCount, setShowCount] = useState(PAGE_SIZE);
+  const visible = suggestions.slice(0, showCount);
+  const hasMore = showCount < suggestions.length;
+  const isExpanded = showCount > PAGE_SIZE;
 
   if (team.length === 0) return null;
 
@@ -159,8 +164,9 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           No type cleanly covers your current weakness profile.
         </p>
       ) : (
+        <>
         <ul className="space-y-2">
-          {suggestions.map((s) => (
+          {visible.map((s) => (
             <li
               key={s.label}
               className="rounded-xl bg-secondary/60 p-2.5 space-y-1.5"
@@ -219,6 +225,20 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
             </li>
           ))}
         </ul>
+        {(hasMore || isExpanded) && (
+          <button
+            type="button"
+            onClick={() => setShowCount((c) => hasMore ? c + PAGE_SIZE : PAGE_SIZE)}
+            className="mt-2 w-full flex items-center justify-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors py-1"
+          >
+            {hasMore ? (
+              <><span>Show more</span> <ChevronDown className="h-3.5 w-3.5" /></>
+            ) : (
+              <><span>Show less</span> <ChevronUp className="h-3.5 w-3.5" /></>
+            )}
+          </button>
+        )}
+        </>
       )}
     </div>
   );
