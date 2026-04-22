@@ -131,7 +131,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground">
           Builds <span className="opacity-60">({builds.length})</span>
         </h2>
-        {!creating && !editingId && (
+        {(
           <div className="flex items-center gap-1.5">
             <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
               <Download className="h-4 w-4 mr-1" />
