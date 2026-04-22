@@ -86,37 +86,38 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           </div>
 
           {/* Row 2: moves (left) + item/ability/nature (right) */}
-          <div className="flex items-start gap-3 min-w-0">
-            <div className="flex flex-col gap-px min-w-0 shrink-0">
-              {moves.length > 0 ? moves.map((m, i) => (
-                <p key={m} className="text-[10px] text-muted-foreground leading-tight">
-                  <span className="text-muted-foreground/50 font-mono w-3 inline-block">{i + 1}.</span>
-                  {formatName(m)}
-                </p>
-              )) : (
-                <p className="text-[10px] text-muted-foreground/50 leading-tight">No moves</p>
-              )}
-            </div>
-            {(build?.item || build?.ability || nature) && (
-              <div className="flex flex-col gap-0.5 items-start min-w-0">
-                {build?.item && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[8rem]">
-                    @ {formatName(build.item)}
-                  </span>
-                )}
-                {build?.ability && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[8rem]">
-                    {formatName(build.ability)}
-                  </span>
-                )}
-                {nature && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
-                    {nature.name}
-                  </span>
-                )}
-              </div>
+          {/* Row 2: moves */}
+          <div className="flex flex-col gap-px min-w-0">
+            {moves.length > 0 ? moves.map((m, i) => (
+              <p key={m} className="text-[11px] text-muted-foreground leading-tight">
+                <span className="text-muted-foreground/50 font-mono w-3.5 inline-block">{i + 1}.</span>
+                {formatName(m)}
+              </p>
+            )) : (
+              <p className="text-[11px] text-muted-foreground/50 leading-tight">No moves</p>
             )}
           </div>
+
+          {/* Row 3: item, ability, nature */}
+          {(build?.item || build?.ability || nature) && (
+            <div className="flex items-center gap-1 min-w-0 flex-wrap mt-0.5">
+              {build?.item && (
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
+                  @ {formatName(build.item)}
+                </span>
+              )}
+              {build?.ability && (
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate max-w-[8rem]">
+                  {formatName(build.ability)}
+                </span>
+              )}
+              {nature && (
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary truncate">
+                  {nature.name}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
