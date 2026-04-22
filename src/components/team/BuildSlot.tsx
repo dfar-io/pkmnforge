@@ -83,7 +83,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
 
           {/* Row 2: build name */}
           <div className="min-w-0 mb-1.5">
-            <p className="truncate text-xs font-display font-semibold text-primary leading-none">{buildName}</p>
+            <p className="truncate text-sm font-display font-semibold text-primary leading-none">{buildName}</p>
           </div>
 
           {/* Row 2: moves (left) + item/ability/nature (right) */}
