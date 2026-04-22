@@ -239,7 +239,6 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           </button>
         )}
         </>
-        </>
       )}
     </div>
   );
