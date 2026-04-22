@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeftRight, Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
+import { BuildEditorDialog } from "@/components/BuildEditorDialog";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -14,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { BuildEditor } from "@/components/BuildEditor";
 import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { getNatureById } from "@/lib/natures";
