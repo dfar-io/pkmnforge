@@ -132,12 +132,12 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
       ;
   }, [threats, combos, validDualTypes]);
 
-  if (team.length === 0) return null;
-
   const [showCount, setShowCount] = useState(PAGE_SIZE);
   const visible = suggestions.slice(0, showCount);
   const hasMore = showCount < suggestions.length;
   const isExpanded = showCount > PAGE_SIZE;
+
+  if (team.length === 0) return null;
 
   return (
     <div className="rounded-2xl bg-card shadow-card p-4">
@@ -231,12 +231,13 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
             className="mt-2 w-full flex items-center justify-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors py-1"
           >
             {hasMore ? (
-              <>Show more <ChevronDown className="h-3.5 w-3.5" /></>
+              <><span>Show more</span> <ChevronDown className="h-3.5 w-3.5" /></>
             ) : (
-              <>Show less <ChevronUp className="h-3.5 w-3.5" /></>
+              <><span>Show less</span> <ChevronUp className="h-3.5 w-3.5" /></>
             )}
           </button>
         )}
+        </>
       )}
     </div>
   );
