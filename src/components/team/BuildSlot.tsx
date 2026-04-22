@@ -61,28 +61,33 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <div className="relative flex items-stretch gap-2 p-2 pl-8 pr-8 min-h-[96px]">
+      <div className="relative flex items-start gap-2.5 p-2.5 pl-3 pr-8 min-h-[96px]">
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
-          className="h-20 w-20 shrink-0 object-contain drop-shadow-lg pointer-events-none"
+          className="h-18 w-18 shrink-0 object-contain drop-shadow-lg pointer-events-none mt-0.5"
           loading="lazy"
         />
-        <div className="min-w-0 flex-1 flex flex-col gap-1">
+        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
+          {/* Pokemon name + types */}
           <div className="flex items-center gap-1.5 min-w-0">
-            <p className="truncate text-sm font-display font-bold text-foreground">
+            <p className="truncate text-sm font-display font-bold text-foreground leading-tight">
               {formatName(member.pokemon.name)}
             </p>
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 shrink-0">
               {member.pokemon.types.map((t) => (
                 <TypeBadge key={t} type={t} size="sm" />
               ))}
             </div>
           </div>
-          <p className="truncate text-xs font-display font-semibold text-primary">
+
+          {/* Build name */}
+          <p className="truncate text-[13px] font-display font-semibold text-primary leading-none">
             {buildName}
           </p>
-          <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] mt-0.5">
+
+          {/* Moves */}
+          <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
             {[0, 1, 2, 3].map((i) => {
               const m = moves[i];
               return (
@@ -92,15 +97,24 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
               );
             })}
           </ul>
-          <div className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-[10px] leading-tight">
-            <span className="text-muted-foreground">Item</span>
-            <span className="truncate font-medium">{build?.item ? formatName(build.item) : "—"}</span>
-            <span className="text-muted-foreground">Ability</span>
-            <span className="truncate font-medium">{build?.ability ? formatName(build.ability) : "—"}</span>
-            <span className="text-muted-foreground">Nature</span>
-            <span className="truncate font-medium">
-              {nature ? `${nature.name} (+${nature.up.toUpperCase()}/−${nature.down.toUpperCase()})` : "—"}
-            </span>
+
+          {/* Item / Ability / Nature badges */}
+          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+            {build?.item && (
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[7rem]">
+                @ {formatName(build.item)}
+              </span>
+            )}
+            {build?.ability && (
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[7rem]">
+                {formatName(build.ability)}
+              </span>
+            )}
+            {nature && (
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
+                {nature.name}
+              </span>
+            )}
           </div>
         </div>
       </div>
