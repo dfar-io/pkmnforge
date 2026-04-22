@@ -61,33 +61,31 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <div className="relative flex items-center gap-2 px-2 py-2 pr-8">
+      <div className="relative flex items-start gap-3 px-3 py-3 pr-8">
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
-          className="h-20 w-20 shrink-0 object-contain pointer-events-none"
+          className="h-20 w-20 shrink-0 object-contain pointer-events-none -ml-1 -mt-1"
           loading="lazy"
         />
-        <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-          {/* Row 1: name + types */}
-          <div className="flex items-center justify-between gap-1.5 min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="truncate text-xs font-display font-bold text-foreground leading-tight">
+        <div className="min-w-0 flex-1 flex flex-col gap-1 py-0.5">
+          {/* Row 1: name + types + build name */}
+          <div className="flex flex-wrap items-center gap-1 min-w-0">
+            <div className="flex items-center gap-1 min-w-0">
+              <p className="truncate text-sm font-display font-bold text-foreground leading-tight">
                 {formatName(member.pokemon.name)}
               </p>
-              <div className="flex items-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0 flex-wrap">
                 {member.pokemon.types.map((t) => (
                   <TypeBadge key={t} type={t} size="sm" />
                 ))}
               </div>
             </div>
-            <p className="truncate text-sm font-display font-semibold text-primary leading-none shrink-0 ml-2">{buildName}</p>
+            <p className="truncate text-sm font-display font-semibold text-primary leading-none ml-auto shrink-0">{buildName}</p>
           </div>
 
-          {/* Row 2: build name */}
-
-          {/* Row 3: moves */}
-          <div className="flex flex-col gap-1 min-w-0">
+          {/* Moves */}
+          <div className="flex flex-col gap-0.5 min-w-0">
             {moves.length > 0 ? moves.map((m, i) => (
               <p key={m} className="text-xs text-muted-foreground leading-tight">
                 <span className="text-muted-foreground/50 font-mono w-4 inline-block">{i + 1}.</span>
@@ -98,21 +96,21 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
             )}
           </div>
 
-          {/* Row 3: item, ability, nature */}
+          {/* Item, ability, nature */}
           {(build?.item || build?.ability || nature) && (
-            <div className="flex flex-col gap-0.5 min-w-0 mt-0.5">
+            <div className="flex flex-wrap gap-1 min-w-0 mt-0.5">
               {build?.item && (
-                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[11px] text-muted-foreground truncate max-w-full">
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate">
                   @ {formatName(build.item)}
                 </span>
               )}
               {build?.ability && (
-                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[11px] text-muted-foreground truncate max-w-full">
+                <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-0.5 text-[10px] text-muted-foreground truncate">
                   {formatName(build.ability)}
                 </span>
               )}
               {nature && (
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[11px] text-primary truncate max-w-full">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary truncate">
                   {nature.name}
                 </span>
               )}
