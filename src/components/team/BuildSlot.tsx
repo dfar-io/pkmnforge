@@ -85,7 +85,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           <p className="truncate text-sm font-display font-semibold text-primary leading-none">{buildName}</p>
 
           {/* Row 3: moves */}
-          <div className="flex flex-col gap-px min-w-0">
+          <div className="flex flex-col gap-1 min-w-0">
             {moves.length > 0 ? moves.map((m, i) => (
               <p key={m} className="text-xs text-muted-foreground leading-tight">
                 <span className="text-muted-foreground/50 font-mono w-4 inline-block">{i + 1}.</span>
