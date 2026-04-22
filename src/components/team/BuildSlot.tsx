@@ -65,7 +65,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
-          className="h-14 w-14 shrink-0 object-contain pointer-events-none"
+          className="h-20 w-20 shrink-0 object-contain pointer-events-none"
           loading="lazy"
         />
         <div className="min-w-0 flex-1 flex flex-col gap-0.5">
