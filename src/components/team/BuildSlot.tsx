@@ -86,29 +86,34 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           </div>
 
           {/* Row 2: moves, item, ability, nature */}
+          {/* Row 2: item, ability, nature */}
           <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            <p className="truncate text-[10px] text-muted-foreground">
-              {moves.length > 0 ? moves.map((m) => formatName(m)).join(" / ") : "No moves"}
-            </p>
-            {(build?.item || build?.ability || nature) && (
-              <>
-                <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
-                {build?.item && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                    @ {formatName(build.item)}
-                  </span>
-                )}
-                {build?.ability && (
-                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                    {formatName(build.ability)}
-                  </span>
-                )}
-                {nature && (
-                  <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
-                    {nature.name}
-                  </span>
-                )}
-              </>
+            {build?.item && (
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
+                @ {formatName(build.item)}
+              </span>
+            )}
+            {build?.ability && (
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
+                {formatName(build.ability)}
+              </span>
+            )}
+            {nature && (
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
+                {nature.name}
+              </span>
+            )}
+          </div>
+
+          {/* Row 3: moves with numbers */}
+          <div className="flex flex-col gap-px min-w-0">
+            {moves.length > 0 ? moves.map((m, i) => (
+              <p key={m} className="text-[10px] text-muted-foreground leading-tight">
+                <span className="text-muted-foreground/50 font-mono w-3 inline-block">{i + 1}.</span>
+                {formatName(m)}
+              </p>
+            )) : (
+              <p className="text-[10px] text-muted-foreground/50 leading-tight">No moves</p>
             )}
           </div>
         </div>
