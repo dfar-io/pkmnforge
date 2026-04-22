@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, ChevronDown, Shield, ShieldOff } from "lucide-react";
+import { ChevronDown, Shield, ShieldOff } from "lucide-react";
 import { X } from "lucide-react";
 import {
   POKEMON_TYPES,
