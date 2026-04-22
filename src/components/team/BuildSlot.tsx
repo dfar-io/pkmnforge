@@ -61,17 +61,17 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <div className="relative flex items-start gap-2.5 p-2.5 pl-3 pr-8 min-h-[96px]">
+      <div className="relative flex items-center gap-2 px-2 py-1.5 pr-8">
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
-          className="h-18 w-18 shrink-0 object-contain drop-shadow-lg pointer-events-none mt-0.5"
+          className="h-10 w-10 shrink-0 object-contain pointer-events-none"
           loading="lazy"
         />
-        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-          {/* Pokemon name + types */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <p className="truncate text-sm font-display font-bold text-foreground leading-tight">
+        <div className="min-w-0 flex-1 flex items-center gap-3">
+          {/* Pokemon name + types + build name */}
+          <div className="flex items-center gap-1.5 min-w-0 shrink-0">
+            <p className="truncate text-xs font-display font-bold text-foreground leading-tight">
               {formatName(member.pokemon.name)}
             </p>
             <div className="flex items-center gap-0.5 shrink-0">
@@ -81,32 +81,28 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
             </div>
           </div>
 
-          {/* Build name */}
-          <p className="truncate text-[13px] font-display font-semibold text-primary leading-none">
+          <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
+
+          <p className="truncate text-[11px] font-display font-semibold text-primary leading-none shrink-0 max-w-[6rem]">
             {buildName}
           </p>
 
-          {/* Moves */}
-          <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px]">
-            {[0, 1, 2, 3].map((i) => {
-              const m = moves[i];
-              return (
-                <li key={i} className="truncate text-foreground/90">
-                  {m ? `${i + 1}. ${formatName(m)}` : <span className="text-muted-foreground/60">{i + 1}. —</span>}
-                </li>
-              );
-            })}
-          </ul>
+          <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
+
+          {/* Moves inline */}
+          <p className="truncate text-[10px] text-muted-foreground min-w-0">
+            {moves.length > 0 ? moves.map((m) => formatName(m)).join(", ") : "No moves"}
+          </p>
 
           {/* Item / Ability / Nature badges */}
-          <div className="flex flex-wrap items-center gap-1 mt-0.5">
+          <div className="hidden sm:flex items-center gap-1 shrink-0 ml-auto">
             {build?.item && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[7rem]">
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
                 @ {formatName(build.item)}
               </span>
             )}
             {build?.ability && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[7rem]">
+              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
                 {formatName(build.ability)}
               </span>
             )}
@@ -119,7 +115,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         </div>
       </div>
 
-      <GripVertical className="absolute bottom-1 right-1 h-3 w-3 text-muted-foreground/40 pointer-events-none" />
+      <GripVertical className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 pointer-events-none" />
     </motion.div>
   );
 };
