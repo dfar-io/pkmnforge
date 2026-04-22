@@ -85,35 +85,36 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
             </p>
           </div>
 
-          {/* Row 2: moves, item, ability, nature */}
-          {/* Row 2: item, ability, nature */}
-          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-            {build?.item && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                @ {formatName(build.item)}
-              </span>
-            )}
-            {build?.ability && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                {formatName(build.ability)}
-              </span>
-            )}
-            {nature && (
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
-                {nature.name}
-              </span>
-            )}
-          </div>
-
-          {/* Row 3: moves with numbers */}
-          <div className="flex flex-col gap-px min-w-0">
-            {moves.length > 0 ? moves.map((m, i) => (
-              <p key={m} className="text-[10px] text-muted-foreground leading-tight">
-                <span className="text-muted-foreground/50 font-mono w-3 inline-block">{i + 1}.</span>
-                {formatName(m)}
-              </p>
-            )) : (
-              <p className="text-[10px] text-muted-foreground/50 leading-tight">No moves</p>
+          {/* Row 2: moves (left) + item/ability/nature (right) */}
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="flex flex-col gap-px min-w-0 shrink-0">
+              {moves.length > 0 ? moves.map((m, i) => (
+                <p key={m} className="text-[10px] text-muted-foreground leading-tight">
+                  <span className="text-muted-foreground/50 font-mono w-3 inline-block">{i + 1}.</span>
+                  {formatName(m)}
+                </p>
+              )) : (
+                <p className="text-[10px] text-muted-foreground/50 leading-tight">No moves</p>
+              )}
+            </div>
+            {(build?.item || build?.ability || nature) && (
+              <div className="flex flex-col gap-0.5 items-start min-w-0">
+                {build?.item && (
+                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[8rem]">
+                    @ {formatName(build.item)}
+                  </span>
+                )}
+                {build?.ability && (
+                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[8rem]">
+                    {formatName(build.ability)}
+                  </span>
+                )}
+                {nature && (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
+                    {nature.name}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>
