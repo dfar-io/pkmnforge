@@ -61,16 +61,16 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
         aria-label={`Open details for ${member.pokemon.name}`}
       />
 
-      <div className="relative flex items-center gap-2 px-2 py-1.5 pr-8">
+      <div className="relative flex items-center gap-2 px-2 py-2 pr-8">
         <img
           src={member.pokemon.sprite}
           alt={member.pokemon.name}
           className="h-10 w-10 shrink-0 object-contain pointer-events-none"
           loading="lazy"
         />
-        <div className="min-w-0 flex-1 flex items-center gap-3">
-          {/* Pokemon name + types + build name */}
-          <div className="flex items-center gap-1.5 min-w-0 shrink-0">
+        <div className="min-w-0 flex-1 flex flex-col gap-1">
+          {/* Row 1: name, types, build name */}
+          <div className="flex items-center gap-1.5 min-w-0">
             <p className="truncate text-xs font-display font-bold text-foreground leading-tight">
               {formatName(member.pokemon.name)}
             </p>
@@ -79,37 +79,36 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
                 <TypeBadge key={t} type={t} size="sm" />
               ))}
             </div>
+            <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
+            <p className="truncate text-[11px] font-display font-semibold text-primary leading-none">
+              {buildName}
+            </p>
           </div>
 
-          <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
-
-          <p className="truncate text-[11px] font-display font-semibold text-primary leading-none shrink-0 max-w-[6rem]">
-            {buildName}
-          </p>
-
-          <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
-
-          {/* Moves inline */}
-          <p className="truncate text-[10px] text-muted-foreground min-w-0">
-            {moves.length > 0 ? moves.map((m) => formatName(m)).join(", ") : "No moves"}
-          </p>
-
-          {/* Item / Ability / Nature badges */}
-          <div className="hidden sm:flex items-center gap-1 shrink-0 ml-auto">
-            {build?.item && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                @ {formatName(build.item)}
-              </span>
-            )}
-            {build?.ability && (
-              <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
-                {formatName(build.ability)}
-              </span>
-            )}
-            {nature && (
-              <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
-                {nature.name}
-              </span>
+          {/* Row 2: moves, item, ability, nature */}
+          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+            <p className="truncate text-[10px] text-muted-foreground">
+              {moves.length > 0 ? moves.map((m) => formatName(m)).join(" / ") : "No moves"}
+            </p>
+            {(build?.item || build?.ability || nature) && (
+              <>
+                <span className="text-muted-foreground/40 text-[10px] shrink-0">·</span>
+                {build?.item && (
+                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
+                    @ {formatName(build.item)}
+                  </span>
+                )}
+                {build?.ability && (
+                  <span className="inline-flex items-center rounded-full bg-secondary/60 px-1.5 py-px text-[9px] text-muted-foreground truncate max-w-[6rem]">
+                    {formatName(build.ability)}
+                  </span>
+                )}
+                {nature && (
+                  <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[9px] text-primary truncate">
+                    {nature.name}
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>
