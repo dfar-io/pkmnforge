@@ -87,7 +87,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
               const m = moves[i];
               return (
                 <li key={i} className="truncate text-foreground/90">
-                  {m ? `• ${formatName(m)}` : <span className="text-muted-foreground/60">• —</span>}
+                  {m ? `${i + 1}. ${formatName(m)}` : <span className="text-muted-foreground/60">{i + 1}. —</span>}
                 </li>
               );
             })}
