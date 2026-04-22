@@ -79,7 +79,7 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
               ))}
             </div>
           </div>
-          <p className="truncate text-[10px] text-muted-foreground italic">
+          <p className="truncate text-xs font-display font-semibold text-primary">
             {buildName}
           </p>
           <ul className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px] mt-0.5">
