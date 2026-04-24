@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Lightbulb, Shield } from "lucide-react";
+import { ChevronDown, ChevronUp, Lightbulb, Shield, X } from "lucide-react";
 import {
   POKEMON_TYPES,
   TYPE_LABEL,
@@ -94,8 +94,17 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
 
   const validDualTypes = useValidDualTypes(combos);
 
+  const [focusType, setFocusType] = useState<PokemonType | null>(null);
+
+  // When focusing, only consider that single threat type. Otherwise use all
+  // weaknesses on the team weighted by share count.
+  const effectiveThreats = useMemo(() => {
+    if (focusType) return [{ type: focusType, weakCount: 1 }];
+    return threats;
+  }, [focusType, threats]);
+
   const suggestions = useMemo<TypeSuggestion[]>(() => {
-    if (threats.length === 0 || !validDualTypes) return [];
+    if (effectiveThreats.length === 0 || !validDualTypes) return [];
 
     return combos
       .filter((c) => {
@@ -106,7 +115,7 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
       const resists: PokemonType[] = [];
       const immunes: PokemonType[] = [];
       let score = 0;
-      for (const t of threats) {
+      for (const t of effectiveThreats) {
         const eff = classify(getMultiplier(t.type, candidate));
         if (eff === "immune") {
           immunes.push(t.type);
@@ -124,15 +133,22 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
           allWeaknesses.push(atk);
         }
       }
+      // Heavy penalty for combos that add a weakness to the focused type:
+      // the user explicitly does NOT want to introduce one.
+      if (focusType && allWeaknesses.includes(focusType)) {
+        score -= 100;
+      }
       const label = candidate.map((t) => TYPE_LABEL[t]).join(" / ");
       return { types: candidate, label, resists, immunes, addsWeakness: allWeaknesses, score };
     })
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
       ;
-  }, [threats, combos, validDualTypes]);
+  }, [effectiveThreats, combos, validDualTypes, focusType]);
 
   const [showCount, setShowCount] = useState(PAGE_SIZE);
+  // Reset pagination when focus changes.
+  useEffect(() => { setShowCount(PAGE_SIZE); }, [focusType]);
   const visible = suggestions.slice(0, showCount);
   const hasMore = showCount < suggestions.length;
   const isExpanded = showCount > PAGE_SIZE;
@@ -150,10 +166,48 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
             Suggested types to add
           </h2>
           <p className="text-[10px] text-muted-foreground">
-            Defending types that cover your team's biggest weaknesses
+            {focusType
+              ? `Resists ${TYPE_LABEL[focusType]} without adding a weakness to it`
+              : "Defending types that cover your team's biggest weaknesses"}
           </p>
         </div>
       </div>
+
+      {threats.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] text-muted-foreground mr-0.5">Focus:</span>
+          {threats.map((t) => {
+            const active = focusType === t.type;
+            return (
+              <button
+                key={t.type}
+                type="button"
+                onClick={() => setFocusType(active ? null : t.type)}
+                className={cn(
+                  "text-[10px] font-display font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-primary-foreground transition-all hover:scale-105 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  `bg-type-${t.type}`,
+                  !active && focusType !== null && "opacity-40",
+                  active && "ring-2 ring-ring ring-offset-1 ring-offset-card",
+                )}
+                aria-pressed={active}
+                aria-label={`Focus on ${TYPE_LABEL[t.type]} threats`}
+              >
+                {TYPE_LABEL[t.type]}
+              </button>
+            );
+          })}
+          {focusType && (
+            <button
+              type="button"
+              onClick={() => setFocusType(null)}
+              className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear focus"
+            >
+              <X className="h-3 w-3" /> clear
+            </button>
+          )}
+        </div>
+      )}
 
       {threats.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">
