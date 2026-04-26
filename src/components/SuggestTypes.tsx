@@ -217,6 +217,18 @@ export const SuggestTypes = ({ team, teamMembers }: SuggestTypesProps) => {
         }
       }
       score += covers.length * 0.75;
+      // When focusing a threat type, also reward combos whose STAB hits it
+      // super-effectively — being able to threaten back is valuable.
+      let hitsFocus = false;
+      if (focusType) {
+        for (const atk of candidate) {
+          if (getMultiplier(atk, [focusType]) > 1) { hitsFocus = true; break; }
+        }
+        if (hitsFocus) {
+          score += 1.5;
+          if (!covers.includes(focusType)) covers.push(focusType);
+        }
+      }
       const label = candidate.map((t) => TYPE_LABEL[t]).join(" / ");
       return { types: candidate, label, resists, immunes, addsWeakness: allWeaknesses, covers, score };
     })
@@ -246,7 +258,7 @@ export const SuggestTypes = ({ team, teamMembers }: SuggestTypesProps) => {
           </h2>
           <p className="text-[10px] text-muted-foreground">
             {focusType
-              ? `Resists ${TYPE_LABEL[focusType]} without adding a weakness to it`
+              ? `Resists or hits ${TYPE_LABEL[focusType]} back without adding a weakness to it`
               : "Defending types that cover your team's biggest weaknesses"}
           </p>
         </div>
