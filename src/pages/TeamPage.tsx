@@ -42,7 +42,7 @@ const TeamPage = () => {
       </section>
 
       {team.length > 0 && (
-        <Tabs defaultValue="suggest" className="w-full">
+        <Tabs defaultValue={isFull ? "defensive" : "suggest"} className="w-full">
           <TabsList className="w-full sticky top-0 z-30 md:static">
             {!isFull && (
               <TabsTrigger value="suggest" className="flex-1">Suggested Types</TabsTrigger>
