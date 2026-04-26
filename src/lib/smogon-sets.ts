@@ -9,7 +9,9 @@ import { NATURES } from "@/lib/natures";
 import type { BuildDraft } from "@/hooks/useBuilds";
 
 const SETS_URL = "https://pkmn.github.io/smogon/data/sets/gen9.json";
+const ANALYSES_URL = "https://pkmn.github.io/smogon/data/analyses/gen9.json";
 const CACHE_KEY = "pokenex.smogon-sets.gen9.v1";
+const ANALYSES_CACHE_KEY = "pokenex.smogon-analyses.gen9.v1";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 1 day
 
 // Smogon set as it appears in the JSON file. Fields can be either a single
@@ -29,8 +31,20 @@ interface RawSet {
 type FormatBlock = Record<string, RawSet>;
 type SmogonDataset = Record<string, Record<string, FormatBlock>>;
 
+// Analyses dataset: prose descriptions per set.
+// Shape: analyses[species][format].sets[setName] = { description: string (HTML) }
+type AnalysesFormatBlock = {
+  sets?: Record<string, { description?: string }>;
+};
+type SmogonAnalysesDataset = Record<
+  string,
+  Record<string, AnalysesFormatBlock>
+>;
+
 let memCache: SmogonDataset | null = null;
 let inflight: Promise<SmogonDataset> | null = null;
+let memAnalyses: SmogonAnalysesDataset | null = null;
+let inflightAnalyses: Promise<SmogonAnalysesDataset> | null = null;
 
 const readDiskCache = (): SmogonDataset | null => {
   try {
@@ -76,6 +90,53 @@ const fetchDataset = async (): Promise<SmogonDataset> => {
       throw e;
     });
   return inflight;
+};
+
+// Generic localStorage TTL helpers for the analyses dataset.
+const readDiskJson = <T>(key: string): T | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const { at, data } = JSON.parse(raw) as { at: number; data: T };
+    if (Date.now() - at > CACHE_TTL_MS) return null;
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const writeDiskJson = <T>(key: string, data: T) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ at: Date.now(), data }));
+  } catch {
+    /* quota — ignore */
+  }
+};
+
+const fetchAnalyses = async (): Promise<SmogonAnalysesDataset> => {
+  if (memAnalyses) return memAnalyses;
+  const disk = readDiskJson<SmogonAnalysesDataset>(ANALYSES_CACHE_KEY);
+  if (disk) {
+    memAnalyses = disk;
+    return disk;
+  }
+  if (inflightAnalyses) return inflightAnalyses;
+  inflightAnalyses = fetch(ANALYSES_URL)
+    .then((r) => {
+      if (!r.ok) throw new Error(`Smogon analyses HTTP ${r.status}`);
+      return r.json() as Promise<SmogonAnalysesDataset>;
+    })
+    .then((data) => {
+      memAnalyses = data;
+      writeDiskJson(ANALYSES_CACHE_KEY, data);
+      inflightAnalyses = null;
+      return data;
+    })
+    .catch((e) => {
+      inflightAnalyses = null;
+      throw e;
+    });
+  return inflightAnalyses;
 };
 
 // --- Name mapping (PokeAPI → Smogon dataset key) -----------------------------
@@ -245,6 +306,8 @@ export interface SmogonSetPreview {
   formatLabel: string;
   setName: string;
   draft: BuildDraft;
+  /** Smogon analysis prose for this set. Plain text, paragraphs joined by blank lines. */
+  description?: string;
 }
 
 const setToDraft = (
@@ -286,22 +349,33 @@ const setToDraft = (
 export const fetchSmogonSets = async (
   apiName: string,
 ): Promise<SmogonSetPreview[]> => {
-  const data = await fetchDataset();
+  // Load sets (required) and analyses (best-effort).
+  const [data, analyses] = await Promise.all([
+    fetchDataset(),
+    fetchAnalyses().catch(() => ({} as SmogonAnalysesDataset)),
+  ]);
   const cands = candidateKeys(apiName);
   const key = cands.find((k) => k in data);
   if (!key) return [];
+
+  // Match the same key (or any candidate) in the analyses dataset.
+  const analysesKey = cands.find((k) => k in analyses) ?? key;
+  const speciesAnalyses = analyses[analysesKey] ?? {};
 
   const formats = data[key];
   const out: SmogonSetPreview[] = [];
   for (const [format, sets] of Object.entries(formats)) {
     if (!STANDARD_FORMATS.has(format)) continue;
     for (const [setName, raw] of Object.entries(sets)) {
+      const descRaw =
+        speciesAnalyses[format]?.sets?.[setName]?.description ?? "";
       out.push({
         id: `${format}/${setName}`,
         format,
         formatLabel: formatLabel(format),
         setName,
         draft: setToDraft(setName, format, raw),
+        description: descRaw ? stripHtml(descRaw) : undefined,
       });
     }
   }
