@@ -225,6 +225,19 @@ const FORMAT_LABEL: Record<string, string> = {
 export const formatLabel = (id: string): string =>
   FORMAT_LABEL[id] ?? id.toUpperCase();
 
+/** Standard singles tier formats we surface as importable sets. */
+const STANDARD_FORMATS = new Set([
+  "ubers",
+  "ou",
+  "uu",
+  "ru",
+  "nu",
+  "pu",
+  "zu",
+  "lc",
+  "nfe",
+]);
+
 export interface SmogonSetPreview {
   /** Stable id within the response (`format/setName`). Used for React keys. */
   id: string;
@@ -281,6 +294,7 @@ export const fetchSmogonSets = async (
   const formats = data[key];
   const out: SmogonSetPreview[] = [];
   for (const [format, sets] of Object.entries(formats)) {
+    if (!STANDARD_FORMATS.has(format)) continue;
     for (const [setName, raw] of Object.entries(sets)) {
       out.push({
         id: `${format}/${setName}`,
