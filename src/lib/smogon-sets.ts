@@ -286,6 +286,29 @@ const FORMAT_LABEL: Record<string, string> = {
 export const formatLabel = (id: string): string =>
   FORMAT_LABEL[id] ?? id.toUpperCase();
 
+/**
+ * Convert Smogon's HTML analysis prose to plain text. Paragraph breaks
+ * become blank lines; all other tags are stripped and entities decoded.
+ */
+const stripHtml = (html: string): string => {
+  const withBreaks = html
+    .replace(/<\s*br\s*\/?>/gi, "\n")
+    .replace(/<\/\s*p\s*>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "");
+  const decoded = withBreaks
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&rsquo;/g, "’")
+    .replace(/&lsquo;/g, "‘")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–");
+  return decoded.replace(/\n{3,}/g, "\n\n").trim();
+};
+
 /** Standard singles tier formats we surface as importable sets. */
 const STANDARD_FORMATS = new Set([
   "ubers",
