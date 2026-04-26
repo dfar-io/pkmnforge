@@ -355,6 +355,18 @@ export const SuggestTypes = ({ team, teamMembers }: SuggestTypesProps) => {
                   </span>
                 </p>
               )}
+              {s.covers.length > 0 && (
+                <p className="text-[10px] text-primary leading-snug inline-flex items-start gap-1">
+                  <Sword className="h-3 w-3 mt-0.5 shrink-0" />
+                  <span>
+                    Hits{" "}
+                    <span className="text-foreground/80 font-semibold">
+                      {s.covers.map((t) => TYPE_LABEL[t]).join(", ")}
+                    </span>{" "}
+                    that your team can't cover
+                  </span>
+                </p>
+              )}
             </li>
           ))}
         </ul>
