@@ -1,7 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles, Plus, Check, ArrowLeftRight, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Plus,
+  Check,
+  ArrowLeftRight,
+  AlertTriangle,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -231,6 +239,10 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                     </>
                   )}
                 </Button>
+
+                {s.description && (
+                  <SetDescription text={s.description} />
+                )}
               </li>
             );
           })}
