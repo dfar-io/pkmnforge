@@ -1,7 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles, Plus, Check, ArrowLeftRight, AlertTriangle } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Plus,
+  Check,
+  ArrowLeftRight,
+  AlertTriangle,
+  ChevronDown,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -23,6 +31,34 @@ import { cn } from "@/lib/utils";
 interface BuildsSectionProps {
   pokemon: PokemonFullDetail;
 }
+
+/**
+ * Collapsible Smogon analysis prose. Collapsed by default to keep cards
+ * scannable on small viewports; expand to read the full strategy notes.
+ */
+const SetDescription = ({ text }: { text: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-border/50 pt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1 text-[11px] font-display font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        aria-expanded={open}
+      >
+        <ChevronDown
+          className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
+        />
+        Smogon analysis
+      </button>
+      {open && (
+        <div className="mt-1.5 space-y-1.5 text-[11px] leading-relaxed text-muted-foreground whitespace-pre-line">
+          {text}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
  * Smogon-only build picker. Each set is a one-tap "add to team" action —
@@ -231,6 +267,10 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                     </>
                   )}
                 </Button>
+
+                {s.description && (
+                  <SetDescription text={s.description} />
+                )}
               </li>
             );
           })}
