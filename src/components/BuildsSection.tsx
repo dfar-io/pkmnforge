@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeftRight, Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
 import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
 import { BuildEditorDialog } from "@/components/BuildEditorDialog";
+import { SmogonSuggestions } from "@/components/SmogonSuggestions";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -70,6 +71,11 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     const b = create(pokemon.id, draft);
     toast.success(`Build "${b.name}" created`);
     setCreating(false);
+  };
+
+  const handleImportSmogon = (draft: BuildDraft) => {
+    const b = create(pokemon.id, draft);
+    toast.success(`Added "${b.name}"`);
   };
 
   const handleUpdate = (id: string, draft: BuildDraft) => {
@@ -172,9 +178,7 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
       />
 
       {builds.length === 0 && !creating && (
-        <p className="rounded-2xl border border-dashed border-border bg-card/30 p-4 text-center text-sm text-muted-foreground">
-          No builds yet. Create one to add this Pokémon to your team.
-        </p>
+        <SmogonSuggestions pokemonName={pokemon.name} onImport={handleImportSmogon} />
       )}
 
       <ul className="space-y-2 mt-2">
