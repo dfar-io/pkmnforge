@@ -1,4 +1,4 @@
-import { Info, Pencil } from "lucide-react";
+import { Info, Settings2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { getNatureById } from "@/lib/natures";
@@ -16,9 +16,7 @@ interface BuildDetailsPopoverProps {
  * item, nature, and moves in a compact popover.
  */
 export const BuildDetailsPopover = ({ build, pokemonId, pokemonName }: BuildDetailsPopoverProps) => {
-  const editHref = build
-    ? `/pokemon/${pokemonId}?edit=${encodeURIComponent(build.id)}#builds`
-    : `/pokemon/${pokemonId}#builds`;
+  const manageHref = `/pokemon/${pokemonId}#builds`;
   const nature = getNatureById(build?.natureId);
   const moves = (build?.moves ?? []).filter(Boolean);
 
@@ -84,12 +82,12 @@ export const BuildDetailsPopover = ({ build, pokemonId, pokemonName }: BuildDeta
         )}
         <div className="pt-1 border-t border-border">
           <Link
-            to={editHref}
+            to={manageHref}
             onClick={(e) => e.stopPropagation()}
             className="flex items-center justify-center gap-1.5 w-full rounded-md py-1.5 text-xs font-medium text-primary hover:bg-accent transition-colors"
           >
-            <Pencil className="h-3 w-3" />
-            {build ? "Edit build" : "Manage builds"}
+            <Settings2 className="h-3 w-3" />
+            Change build
           </Link>
         </div>
       </PopoverContent>
