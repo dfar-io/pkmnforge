@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Lightbulb, Shield, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Lightbulb, Shield, Sword, X } from "lucide-react";
 import {
   POKEMON_TYPES,
   TYPE_LABEL,
@@ -8,11 +8,16 @@ import {
   getMultiplier,
   type PokemonType,
 } from "@/lib/pokemon-types";
-import { fetchPokemonIdsByType, type PokemonDetail } from "@/lib/pokeapi";
+import { fetchMoveType, fetchPokemonIdsByType, type PokemonDetail } from "@/lib/pokeapi";
+import { useBuilds } from "@/hooks/useBuilds";
+import type { TeamMember } from "@/lib/builds";
 import { cn } from "@/lib/utils";
 
 interface SuggestTypesProps {
   team: PokemonDetail[];
+  // Optional: full team members so we can factor in offensive coverage gaps
+  // from the team's currently-known attacking moves.
+  teamMembers?: TeamMember[];
 }
 
 interface TypeSuggestion {
@@ -23,6 +28,8 @@ interface TypeSuggestion {
   immunes: PokemonType[];
   // ALL types this combo is weak to.
   addsWeakness: PokemonType[];
+  // Offensive gaps this combo would help cover (super-effectively) via STAB.
+  covers: PokemonType[];
   score: number;
 }
 
