@@ -44,13 +44,17 @@ const TeamPage = () => {
       {team.length > 0 && (
         <Tabs defaultValue="suggest" className="w-full">
           <TabsList className="w-full sticky top-0 z-30 md:static">
-            <TabsTrigger value="suggest" className="flex-1">Suggested Types</TabsTrigger>
+            {!isFull && (
+              <TabsTrigger value="suggest" className="flex-1">Suggested Types</TabsTrigger>
+            )}
             <TabsTrigger value="defensive" className="flex-1">Defensive</TabsTrigger>
             <TabsTrigger value="offensive" className="flex-1">Offensive</TabsTrigger>
           </TabsList>
-          <TabsContent value="suggest">
-            <SuggestTypes team={pokemonOnly} />
-          </TabsContent>
+          {!isFull && (
+            <TabsContent value="suggest">
+              <SuggestTypes team={pokemonOnly} />
+            </TabsContent>
+          )}
           <TabsContent value="defensive">
             <TeamAnalysis
               team={team}
