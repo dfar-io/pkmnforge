@@ -312,6 +312,7 @@ const stripHtml = (html: string): string => {
 /** Standard singles tier formats we surface as importable sets. */
 const STANDARD_FORMATS = new Set([
   "ubers",
+  "ubersuu",
   "ou",
   "uu",
   "ru",
