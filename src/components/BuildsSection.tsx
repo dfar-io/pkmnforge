@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
+import { useBuilds } from "@/hooks/useBuilds";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { getNatureById } from "@/lib/natures";
 import { formatName, type PokemonFullDetail } from "@/lib/pokeapi";
@@ -267,6 +267,3 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     </section>
   );
 };
-
-// Suppress unused import warning when BuildDraft is not referenced directly.
-export type _Unused = BuildDraft;
