@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeftRight, Copy, Download, Pencil, Plus, Sparkles, Trash2, Check, AlertTriangle } from "lucide-react";
-import { ImportShowdownDialog } from "@/components/ImportShowdownDialog";
-import { BuildEditorDialog } from "@/components/BuildEditorDialog";
-import { SmogonSuggestions } from "@/components/SmogonSuggestions";
+import { useEffect, useState } from "react";
+import { Loader2, Sparkles, Plus, Check, ArrowLeftRight, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -20,40 +17,40 @@ import { useBuilds, type BuildDraft } from "@/hooks/useBuilds";
 import { useTeamContext, TEAM_SIZE } from "@/context/TeamContext";
 import { getNatureById } from "@/lib/natures";
 import { formatName, type PokemonFullDetail } from "@/lib/pokeapi";
-import type { PokemonBuild } from "@/lib/builds";
+import { fetchSmogonSets, type SmogonSetPreview } from "@/lib/smogon-sets";
 import { cn } from "@/lib/utils";
 
 interface BuildsSectionProps {
   pokemon: PokemonFullDetail;
 }
 
+/**
+ * Smogon-only build picker. Each set is a one-tap "add to team" action —
+ * we silently materialise it as a build in storage so the team slot can
+ * resolve its details, then add (or swap) it into the active team.
+ */
 export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
-  const { getForPokemon, create, update, remove, duplicate } = useBuilds();
+  const { getForPokemon, create, remove } = useBuilds();
   const { team, setTeam } = useTeamContext();
   const navigate = useNavigate();
   const builds = getForPokemon(pokemon.id);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<PokemonBuild | null>(null);
-  const isFull = team.length >= TEAM_SIZE;
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [sets, setSets] = useState<SmogonSetPreview[] | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<{ buildId: string; name: string } | null>(null);
+
   useEffect(() => {
-    const editId = searchParams.get("edit");
-    if (!editId) return;
-    if (builds.some((b) => b.id === editId)) {
-      setEditingId(editId);
-      setCreating(false);
-      requestAnimationFrame(() => {
-        document.getElementById("builds")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-      const next = new URLSearchParams(searchParams);
-      next.delete("edit");
-      setSearchParams(next, { replace: true });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, builds.length]);
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    setSets(null);
+    fetchSmogonSets(pokemon.name)
+      .then((s) => { if (!cancelled) setSets(s); })
+      .catch(() => { if (!cancelled) setError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [pokemon.name]);
 
   const slim = {
     id: pokemon.id,
@@ -62,172 +59,119 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     sprite: pokemon.sprite,
   };
 
-  const buildIdsInTeam = new Set(
-    team.filter((m) => m.pokemonId === pokemon.id).map((m) => m.buildId),
-  );
-  const hasPokemonInTeam = buildIdsInTeam.size > 0;
+  const teamSlotForPokemon = team.find((m) => m.pokemonId === pokemon.id);
+  const activeBuildId = teamSlotForPokemon?.buildId;
+  const activeBuild = activeBuildId ? builds.find((b) => b.id === activeBuildId) : undefined;
+  const isFull = team.length >= TEAM_SIZE;
 
-  const handleCreate = (draft: BuildDraft) => {
-    const b = create(pokemon.id, draft);
-    toast.success(`Build "${b.name}" created`);
-    setCreating(false);
-  };
-
-  const handleImportSmogon = (draft: BuildDraft) => {
-    const b = create(pokemon.id, draft);
-    toast.success(`Added "${b.name}"`);
-  };
-
-  const handleUpdate = (id: string, draft: BuildDraft) => {
-    const b = update(id, draft);
-    if (b) toast.success(`Build "${b.name}" updated`);
-    setEditingId(null);
-  };
-
-  const handleDelete = (b: PokemonBuild) => {
-    // Also drop from team if present.
-    setTeam((prev) => prev.filter((m) => m.buildId !== b.id));
-    remove(b.id);
-    toast.success(`Build "${b.name}" deleted`);
-    setPendingDelete(null);
-  };
-
-  const handleDuplicate = (b: PokemonBuild) => {
-    const copy = duplicate(b.id);
-    if (copy) toast.success(`Copied "${b.name}"`);
-  };
-
-  const handleAddToTeam = (b: PokemonBuild) => {
-    if (isFull) return;
-    if (buildIdsInTeam.has(b.id)) return;
-    setTeam((prev) =>
-      prev.length >= TEAM_SIZE
-        ? prev
-        : [...prev, { pokemonId: pokemon.id, buildId: b.id, pokemon: slim }],
+  /** Find an already-imported build that matches a Smogon set (same name + moves). */
+  const findExistingBuild = (s: SmogonSetPreview) => {
+    return builds.find(
+      (b) =>
+        b.name === s.draft.name &&
+        b.moves.join("|") === s.draft.moves.join("|"),
     );
-    toast.success(`${b.name} added to team`, {
-      action: { label: "View team", onClick: () => navigate("/") },
-    });
   };
 
-  /**
-   * Swap the team slot for this Pokémon to use build `b` instead.
-   * Replaces the first matching slot in place (preserves position).
-   */
-  const handleSwapInTeam = (b: PokemonBuild) => {
-    if (buildIdsInTeam.has(b.id)) return;
-    let swapped = false;
-    setTeam((prev) =>
-      prev.map((m) => {
-        if (!swapped && m.pokemonId === pokemon.id) {
-          swapped = true;
-          return { ...m, buildId: b.id };
-        }
-        return m;
-      }),
-    );
-    toast.success(`Swapped to "${b.name}"`, {
-      action: { label: "View team", onClick: () => navigate("/") },
-    });
+  const handlePick = (s: SmogonSetPreview) => {
+    const existing = findExistingBuild(s);
+    const buildId = existing ? existing.id : create(pokemon.id, s.draft).id;
+
+    if (teamSlotForPokemon) {
+      // Swap the existing slot's build in place.
+      if (teamSlotForPokemon.buildId === buildId) return;
+      setTeam((prev) =>
+        prev.map((m) =>
+          m.pokemonId === pokemon.id ? { ...m, buildId } : m,
+        ),
+      );
+      toast.success(`Swapped to "${s.draft.name}"`, {
+        action: { label: "View team", onClick: () => navigate("/") },
+      });
+    } else {
+      if (isFull) {
+        toast.error("Team is full");
+        return;
+      }
+      setTeam((prev) =>
+        prev.length >= TEAM_SIZE
+          ? prev
+          : [...prev, { pokemonId: pokemon.id, buildId, pokemon: slim }],
+      );
+      toast.success(`${s.draft.name} added to team`, {
+        action: { label: "View team", onClick: () => navigate("/") },
+      });
+    }
+  };
+
+  const handleConfirmRemove = () => {
+    if (!pendingRemove) return;
+    setTeam((prev) => prev.filter((m) => m.buildId !== pendingRemove.buildId));
+    remove(pendingRemove.buildId);
+    toast.success(`Removed ${formatName(pokemon.name)} from team`);
+    setPendingRemove(null);
   };
 
   return (
     <section id="builds" className="scroll-mt-20">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xs font-display font-bold uppercase tracking-wider text-muted-foreground">
-          Builds <span className="opacity-60">({builds.length})</span>
+          Smogon sets {sets && <span className="opacity-60">({sets.length})</span>}
         </h2>
-        {(
-          <div className="flex items-center gap-1.5">
-            <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
-              <Download className="h-4 w-4 mr-1" />
-              Import
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
-              <Plus className="h-4 w-4 mr-1" />
-              New build
-            </Button>
-          </div>
+        {activeBuild && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={() => setPendingRemove({ buildId: activeBuild.id, name: activeBuild.name })}
+          >
+            Remove from team
+          </Button>
         )}
       </div>
 
-      <ImportShowdownDialog
-        pokemon={pokemon}
-        open={importing}
-        onOpenChange={setImporting}
-        onImport={(draft) => create(pokemon.id, draft)}
-      />
-
-      <BuildEditorDialog
-        pokemon={pokemon}
-        open={creating}
-        onOpenChange={setCreating}
-        onSave={handleCreate}
-      />
-
-      <BuildEditorDialog
-        pokemon={pokemon}
-        open={!!editingId}
-        onOpenChange={(open) => { if (!open) setEditingId(null); }}
-        initial={editingId ? (() => {
-          const b = builds.find((x) => x.id === editingId);
-          return b ? { name: b.name, ability: b.ability, item: b.item, natureId: b.natureId, moves: b.moves, notes: b.notes } : undefined;
-        })() : undefined}
-        onSave={(d) => { if (editingId) handleUpdate(editingId, d); }}
-        title={editingId ? `Edit build — ${formatName(pokemon.name)}` : undefined}
-      />
-
-      {builds.length === 0 && !creating && (
-        <SmogonSuggestions pokemonName={pokemon.name} onImport={handleImportSmogon} />
+      {loading && (
+        <div className="rounded-2xl border border-dashed border-border bg-card/30 p-6 grid place-items-center text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+        </div>
       )}
 
-      <ul className="space-y-2 mt-2">
-        {builds.map((b) => {
-          const inTeam = buildIdsInTeam.has(b.id);
-          const nature = getNatureById(b.natureId);
-          return (
-            <li
-              key={b.id}
-              className="rounded-2xl border border-border bg-card/50 p-3 space-y-2"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-display font-bold text-sm truncate">{b.name}</h3>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setEditingId(b.id)}
-                    aria-label="Edit build"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => handleDuplicate(b)}
-                    aria-label="Duplicate build"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    onClick={() => setPendingDelete(b)}
-                    aria-label="Delete build"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
+      {!loading && (error || !sets || sets.length === 0) && (
+        <p className="rounded-2xl border border-dashed border-border bg-card/30 p-4 text-center text-sm text-muted-foreground">
+          No Smogon sets available for {formatName(pokemon.name)}.
+        </p>
+      )}
 
-              {b.moves.some(Boolean) && (
+      {!loading && sets && sets.length > 0 && (
+        <ul className="space-y-2">
+          {sets.map((s) => {
+            const existing = findExistingBuild(s);
+            const isActive = existing && existing.id === activeBuildId;
+            const nature = getNatureById(s.draft.natureId);
+            const canAct = !isActive && (teamSlotForPokemon || !isFull);
+            return (
+              <li
+                key={s.id}
+                className={cn(
+                  "rounded-2xl border p-3 space-y-2 transition-colors",
+                  isActive
+                    ? "border-primary/60 bg-primary/5"
+                    : "border-border bg-card/50",
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="rounded-full bg-primary/15 text-primary px-1.5 py-0.5 text-[9px] font-display font-bold uppercase tracking-wide">
+                        {s.formatLabel}
+                      </span>
+                      <h3 className="font-display font-bold text-sm truncate">{s.setName}</h3>
+                    </div>
+                  </div>
+                </div>
+
                 <ul className="grid grid-cols-2 gap-1">
-                  {b.moves.map((m, i) => (
+                  {s.draft.moves.map((m, i) => (
                     <li
                       key={i}
                       className={cn(
@@ -241,103 +185,81 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                     </li>
                   ))}
                 </ul>
-              )}
 
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-                {b.item && (
-                  <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
-                    @ {formatName(b.item)}
-                  </span>
-                )}
-                {b.ability && (
-                  <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
-                    {formatName(b.ability)}
-                  </span>
-                )}
-                {nature && (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-primary">
-                    <Sparkles className="h-2.5 w-2.5" />
-                    {nature.name}
-                  </span>
-                )}
-              </div>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                  {s.draft.item && (
+                    <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
+                      @ {formatName(s.draft.item)}
+                    </span>
+                  )}
+                  {s.draft.ability && (
+                    <span className="rounded-full bg-secondary/60 px-1.5 py-0.5">
+                      {formatName(s.draft.ability)}
+                    </span>
+                  )}
+                  {nature && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-primary">
+                      <Sparkles className="h-2.5 w-2.5" />
+                      {nature.name}
+                    </span>
+                  )}
+                </div>
 
-              {b.notes && (
-                <p className="text-[11px] text-muted-foreground whitespace-pre-wrap">
-                  {b.notes}
-                </p>
-              )}
-
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (inTeam) return;
-                  if (hasPokemonInTeam) handleSwapInTeam(b);
-                  else handleAddToTeam(b);
-                }}
-                disabled={inTeam || (!hasPokemonInTeam && isFull)}
-                variant={inTeam ? "secondary" : hasPokemonInTeam ? "outline" : "default"}
-                className="w-full"
-              >
-                {inTeam ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1.5" />
-                    Active in your team
-                  </>
-                ) : hasPokemonInTeam ? (
-                  <>
-                    <ArrowLeftRight className="h-4 w-4 mr-1.5" />
-                    Swap to this build
-                  </>
-                ) : isFull ? (
-                  "Team is full"
-                ) : (
-                  <>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Add this build to team
-                  </>
-                )}
-              </Button>
-            </li>
-          );
-        })}
-      </ul>
+                <Button
+                  size="sm"
+                  onClick={() => handlePick(s)}
+                  disabled={!canAct}
+                  variant={isActive ? "secondary" : teamSlotForPokemon ? "outline" : "default"}
+                  className="w-full"
+                >
+                  {isActive ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5" />
+                      Active in your team
+                    </>
+                  ) : teamSlotForPokemon ? (
+                    <>
+                      <ArrowLeftRight className="h-4 w-4 mr-1.5" />
+                      Swap to this set
+                    </>
+                  ) : isFull ? (
+                    "Team is full"
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-1.5" />
+                      Add to team
+                    </>
+                  )}
+                </Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <AlertDialog
-        open={!!pendingDelete}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        open={!!pendingRemove}
+        onOpenChange={(open) => !open && setPendingRemove(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete build?</AlertDialogTitle>
+            <AlertDialogTitle>Remove from team?</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm">
-                <p>
-                  This will permanently delete{" "}
-                  <span className="text-foreground font-medium">
-                    "{pendingDelete?.name}"
-                  </span>
-                  .
-                </p>
-                {pendingDelete && buildIdsInTeam.has(pendingDelete.id) && (
-                  <p className="flex items-start gap-2 text-warning">
-                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>
-                      This build is currently in your team. Removing it will also
-                      remove {formatName(pokemon.name)} from your team.
-                    </span>
-                  </p>
-                )}
-              </div>
+              <p className="flex items-start gap-2 text-sm">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-warning" />
+                <span>
+                  This will remove {formatName(pokemon.name)} from your team.
+                </span>
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => pendingDelete && handleDelete(pendingDelete)}
+              onClick={handleConfirmRemove}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete build
+              Remove
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -345,3 +267,6 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
     </section>
   );
 };
+
+// Suppress unused import warning when BuildDraft is not referenced directly.
+export type _Unused = BuildDraft;
