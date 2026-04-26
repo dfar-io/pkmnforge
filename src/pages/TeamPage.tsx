@@ -52,7 +52,7 @@ const TeamPage = () => {
           </TabsList>
           {!isFull && (
             <TabsContent value="suggest">
-              <SuggestTypes team={pokemonOnly} />
+              <SuggestTypes team={pokemonOnly} teamMembers={team} />
             </TabsContent>
           )}
           <TabsContent value="defensive">
