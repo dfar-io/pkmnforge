@@ -71,8 +71,71 @@ function useValidDualTypes(combos: PokemonType[][]) {
   return valid;
 }
 
-export const SuggestTypes = ({ team }: SuggestTypesProps) => {
+export const SuggestTypes = ({ team, teamMembers }: SuggestTypesProps) => {
   const navigate = useNavigate();
+  const { getById } = useBuilds();
+
+  // ─── Offensive gap analysis ────────────────────────────────────────────────
+  // Resolve attacking move types from the team's saved builds, then determine
+  // which defender types the team currently CANNOT hit super-effectively.
+  const moveNames = useMemo(() => {
+    const set = new Set<string>();
+    if (!teamMembers) return [] as string[];
+    for (const m of teamMembers) {
+      const b = getById(m.buildId);
+      if (!b) continue;
+      for (const mv of b.moves) if (mv) set.add(mv);
+    }
+    return Array.from(set);
+  }, [teamMembers, getById]);
+
+  const [resolvedMoves, setResolvedMoves] = useState<Map<string, PokemonType | null>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    const unknown = moveNames.filter((n) => !resolvedMoves.has(n));
+    if (unknown.length === 0) return;
+    (async () => {
+      const entries = await Promise.all(
+        unknown.map(async (n) => [n, await fetchMoveType(n)] as const),
+      );
+      if (cancelled) return;
+      setResolvedMoves((prev) => {
+        const next = new Map(prev);
+        for (const [n, t] of entries) next.set(n, t);
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [moveNames, resolvedMoves]);
+
+  // Defender types the team currently cannot hit super-effectively with any
+  // known attacking move. These are the offensive "gaps" we want to close.
+  const offensiveGaps = useMemo<PokemonType[]>(() => {
+    if (!teamMembers || teamMembers.length === 0) return [];
+    const memberAttackTypes: PokemonType[][] = teamMembers.map((m) => {
+      const b = getById(m.buildId);
+      const types: PokemonType[] = [];
+      if (b) for (const mv of b.moves) {
+        if (!mv) continue;
+        const t = resolvedMoves.get(mv);
+        if (t) types.push(t);
+      }
+      return Array.from(new Set(types));
+    });
+    const anyKnown = memberAttackTypes.some((arr) => arr.length > 0);
+    if (!anyKnown) return [];
+    return POKEMON_TYPES.filter((defender) => {
+      let best = 0;
+      for (const atks of memberAttackTypes) {
+        for (const atk of atks) {
+          const m = getMultiplier(atk, [defender]);
+          if (m > best) best = m;
+        }
+      }
+      return classify(best) !== "weak";
+    });
+  }, [teamMembers, getById, resolvedMoves]);
+
   // Top threat types: those at least one team member is weak to, weighted by
   // how many members share the weakness.
   const threats = useMemo(() => {
@@ -145,13 +208,22 @@ export const SuggestTypes = ({ team }: SuggestTypesProps) => {
       if (focusType && allWeaknesses.includes(focusType)) {
         score -= 100;
       }
+      // Offensive bonus: candidate's types double as STAB attacking types.
+      // Reward each offensive gap it would now hit super-effectively.
+      const covers: PokemonType[] = [];
+      for (const gap of offensiveGaps) {
+        for (const atk of candidate) {
+          if (getMultiplier(atk, [gap]) > 1) { covers.push(gap); break; }
+        }
+      }
+      score += covers.length * 0.75;
       const label = candidate.map((t) => TYPE_LABEL[t]).join(" / ");
-      return { types: candidate, label, resists, immunes, addsWeakness: allWeaknesses, score };
+      return { types: candidate, label, resists, immunes, addsWeakness: allWeaknesses, covers, score };
     })
       .filter((s) => s.score > 0)
       .sort((a, b) => b.score - a.score)
       ;
-  }, [effectiveThreats, combos, validDualTypes, focusType]);
+  }, [effectiveThreats, combos, validDualTypes, focusType, offensiveGaps]);
 
   const [showCount, setShowCount] = useState(PAGE_SIZE);
   // Reset pagination when focus changes.
