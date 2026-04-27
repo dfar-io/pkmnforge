@@ -82,6 +82,28 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<PokemonBuild | undefined>(undefined);
   const [pendingDeleteCustom, setPendingDeleteCustom] = useState<PokemonBuild | null>(null);
+  /**
+   * Per-set, per-slot index of which alternative move is currently chosen.
+   * Keyed by `set.id`; defaults (index 0) are implicit when missing.
+   */
+  const [moveChoices, setMoveChoices] = useState<Record<string, number[]>>({});
+
+  /** Resolve the active moves for a Smogon set, applying user overrides. */
+  const movesForSet = (s: SmogonSetPreview): [string, string, string, string] => {
+    const picks = moveChoices[s.id];
+    if (!picks) return s.draft.moves;
+    return s.draft.moves.map((def, i) => {
+      const opts = s.moveOptions[i] ?? [];
+      const idx = picks[i] ?? 0;
+      return opts[idx] ?? def;
+    }) as [string, string, string, string];
+  };
+
+  /** Build the draft we'd actually import, with the user's chosen alternatives. */
+  const draftForSet = (s: SmogonSetPreview): BuildDraft => ({
+    ...s.draft,
+    moves: movesForSet(s),
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -109,24 +131,40 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
 
   /** Find an already-imported build that matches a Smogon set (same name + moves). */
   const findExistingBuild = (s: SmogonSetPreview) => {
+    const moves = movesForSet(s);
     return builds.find(
       (b) =>
         b.name === s.draft.name &&
-        b.moves.join("|") === s.draft.moves.join("|"),
+        b.moves.join("|") === moves.join("|"),
     );
   };
 
-  // Builds the user authored themselves — anything not matching a Smogon set.
-  const smogonSignatures = new Set(
-    (sets ?? []).map((s) => `${s.draft.name}|${s.draft.moves.join("|")}`),
-  );
+  // Builds the user authored themselves — anything not matching a Smogon set
+  // (including any alternative-move permutation we surface in the picker).
+  const smogonSignatures = new Set<string>();
+  for (const s of sets ?? []) {
+    // Cartesian product across slot options; cap to keep this cheap.
+    const slots = s.moveOptions.map((opts) => (opts.length ? opts : [""]));
+    let combos: string[][] = [[]];
+    for (const slot of slots) {
+      const next: string[][] = [];
+      for (const c of combos) for (const m of slot) next.push([...c, m]);
+      combos = next;
+      if (combos.length > 64) break; // safety
+    }
+    for (const c of combos) {
+      smogonSignatures.add(`${s.draft.name}|${c.join("|")}`);
+    }
+    // Always include the default too in case slicing kicked in.
+    smogonSignatures.add(`${s.draft.name}|${s.draft.moves.join("|")}`);
+  }
   const customBuilds = builds.filter(
     (b) => !smogonSignatures.has(`${b.name}|${b.moves.join("|")}`),
   );
 
   const handlePick = (s: SmogonSetPreview) => {
     const existing = findExistingBuild(s);
-    const buildId = existing ? existing.id : create(pokemon.id, s.draft).id;
+    const buildId = existing ? existing.id : create(pokemon.id, draftForSet(s)).id;
 
     if (teamSlotForPokemon) {
       // Swap the existing slot's build in place.
@@ -266,19 +304,60 @@ export const BuildsSection = ({ pokemon }: BuildsSectionProps) => {
                 </div>
 
                 <ul className="grid grid-cols-2 gap-1">
-                  {s.draft.moves.map((m, i) => (
-                    <li
-                      key={i}
-                      className={cn(
-                        "rounded-md px-2 py-1 text-[11px] truncate",
-                        m
-                          ? "bg-secondary/60 text-foreground"
-                          : "bg-secondary/30 text-muted-foreground/50 italic",
-                      )}
-                    >
-                      {m ? formatName(m) : `Move ${i + 1}`}
-                    </li>
-                  ))}
+                  {s.draft.moves.map((_, i) => {
+                    const opts = s.moveOptions[i] ?? [];
+                    const chosenIdx = moveChoices[s.id]?.[i] ?? 0;
+                    const chosen = opts[chosenIdx] ?? s.draft.moves[i];
+                    if (opts.length <= 1) {
+                      return (
+                        <li
+                          key={i}
+                          className={cn(
+                            "rounded-md px-2 py-1 text-[11px] truncate",
+                            chosen
+                              ? "bg-secondary/60 text-foreground"
+                              : "bg-secondary/30 text-muted-foreground/50 italic",
+                          )}
+                        >
+                          {chosen ? formatName(chosen) : `Move ${i + 1}`}
+                        </li>
+                      );
+                    }
+                    return (
+                      <li
+                        key={i}
+                        className="rounded-md bg-secondary/60 px-1.5 py-1 text-[11px] flex flex-wrap items-center gap-1"
+                      >
+                        {opts.map((opt, optIdx) => {
+                          const active = optIdx === chosenIdx;
+                          return (
+                            <button
+                              key={opt + optIdx}
+                              type="button"
+                              onClick={() =>
+                                setMoveChoices((prev) => {
+                                  const cur =
+                                    prev[s.id] ?? s.moveOptions.map(() => 0);
+                                  const next = [...cur];
+                                  next[i] = optIdx;
+                                  return { ...prev, [s.id]: next };
+                                })
+                              }
+                              className={cn(
+                                "rounded px-1.5 py-0.5 text-[11px] transition-colors",
+                                active
+                                  ? "bg-primary/20 text-primary font-semibold"
+                                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                              )}
+                              aria-pressed={active}
+                            >
+                              {formatName(opt)}
+                            </button>
+                          );
+                        })}
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
