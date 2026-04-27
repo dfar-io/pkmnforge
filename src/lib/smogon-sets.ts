@@ -330,6 +330,12 @@ export interface SmogonSetPreview {
   formatLabel: string;
   setName: string;
   draft: BuildDraft;
+  /**
+   * Per-slot move alternatives as published by Smogon. Index matches
+   * `draft.moves`; each entry is the full list of options (first = chosen
+   * default). Slots with only one option still appear here for symmetry.
+   */
+  moveOptions: string[][];
   /** Smogon analysis prose for this set. Plain text, paragraphs joined by blank lines. */
   description?: string;
 }
@@ -338,14 +344,19 @@ const setToDraft = (
   setName: string,
   format: string,
   raw: RawSet,
-): BuildDraft => {
+): { draft: BuildDraft; moveOptions: string[][] } => {
   const ability = toApiId(pickFirst(raw.ability));
   const item = toApiId(pickFirst(raw.item));
   const natureName = pickFirst(raw.nature).toLowerCase();
   const natureId = NATURE_BY_NAME.get(natureName) ?? "";
 
-  const moves = raw.moves.slice(0, 4).map((m) => toApiId(pickFirst(m)));
+  // Preserve every option Smogon lists per slot; default to the first.
+  const moveOptions: string[][] = raw.moves
+    .slice(0, 4)
+    .map((m) => (Array.isArray(m) ? m : [m]).map(toApiId).filter(Boolean));
+  const moves = moveOptions.map((opts) => opts[0] ?? "");
   while (moves.length < 4) moves.push("");
+  while (moveOptions.length < 4) moveOptions.push([]);
 
   const notesParts: string[] = [];
   notesParts.push(`Imported from Smogon (${formatLabel(format)} — ${setName})`);
@@ -356,13 +367,27 @@ const setToDraft = (
   const tera = pickFirst(raw.teratypes);
   if (tera) notesParts.push(`Tera Type: ${tera}`);
 
+  // Record any slot with multiple move options so the alternatives survive
+  // import even if the user never opens the preview again.
+  const altLines = moveOptions
+    .map((opts, i) =>
+      opts.length > 1
+        ? `Move ${i + 1} options: ${opts.join(" / ")}`
+        : "",
+    )
+    .filter(Boolean);
+  if (altLines.length) notesParts.push(...altLines);
+
   return {
-    name: `${setName} (${formatLabel(format)})`,
-    ability,
-    item,
-    natureId,
-    moves: moves as [string, string, string, string],
-    notes: notesParts.join("\n"),
+    draft: {
+      name: `${setName} (${formatLabel(format)})`,
+      ability,
+      item,
+      natureId,
+      moves: moves as [string, string, string, string],
+      notes: notesParts.join("\n"),
+    },
+    moveOptions,
   };
 };
 
@@ -393,12 +418,14 @@ export const fetchSmogonSets = async (
     for (const [setName, raw] of Object.entries(sets)) {
       const descRaw =
         speciesAnalyses[format]?.sets?.[setName]?.description ?? "";
+      const { draft, moveOptions } = setToDraft(setName, format, raw);
       out.push({
         id: `${format}/${setName}`,
         format,
         formatLabel: formatLabel(format),
         setName,
-        draft: setToDraft(setName, format, raw),
+        draft,
+        moveOptions,
         description: descRaw ? stripHtml(descRaw) : undefined,
       });
     }
