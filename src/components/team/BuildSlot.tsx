@@ -3,6 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { GripVertical, X } from "lucide-react";
 import { TypeBadge } from "@/components/TypeBadge";
+import { SmogonTierBadge } from "@/components/SmogonTierBadge";
 import { formatName } from "@/lib/pokeapi";
 import { getNatureById } from "@/lib/natures";
 import type { PokemonBuild, TeamMember } from "@/lib/builds";
@@ -69,12 +70,13 @@ export const BuildSlot = ({ member, build, buildName, onRemove, onOpenDetail }: 
           loading="lazy"
         />
         <div className="min-w-0 flex-1 flex flex-col gap-1 py-0.5">
-          {/* Row 1: name + types + build name */}
-          <div className="flex flex-wrap items-center gap-1 min-w-0">
-            <div className="flex items-center gap-1 min-w-0">
+          {/* Row 1: name + tier + types + build name */}
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
               <p className="truncate text-sm font-display font-bold text-foreground leading-tight">
                 {formatName(member.pokemon.name)}
               </p>
+              <SmogonTierBadge pokemonId={member.pokemon.id} className="shrink-0" />
               <div className="flex items-center gap-0.5 shrink-0 flex-wrap">
                 {member.pokemon.types.map((t) => (
                   <TypeBadge key={t} type={t} size="sm" />
