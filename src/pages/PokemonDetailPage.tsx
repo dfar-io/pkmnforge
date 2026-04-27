@@ -112,10 +112,11 @@ const PokemonDetailPage = () => {
           <h1 className="font-display text-2xl font-extrabold tracking-tight">
             {formatName(detail.name)}
           </h1>
-          <div className="flex items-center gap-1 mt-1.5">
+          <div className="flex items-center gap-1 mt-1.5 flex-wrap">
             {detail.types.map((t) => (
               <TypeIcon key={t} type={t} />
             ))}
+            <SmogonTierBadge pokemonId={detail.id} tier={getSmogonTier(detail.id)} className="ml-1" />
           </div>
           <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
             <span>{(detail.height / 10).toFixed(1)} m</span>
