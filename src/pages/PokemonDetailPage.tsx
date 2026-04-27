@@ -15,6 +15,8 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { BuildsSection } from "@/components/BuildsSection";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { SmogonTierBadge } from "@/components/SmogonTierBadge";
+import { getSmogonTier } from "@/lib/smogon";
 
 const STAT_LABEL: Record<string, string> = {
   hp: "HP",
