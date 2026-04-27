@@ -360,21 +360,22 @@ const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, showBst, onTogg
         }
       >
         <div className="flex items-center gap-3 p-2 flex-1 min-w-0">
-          <img
-            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
-            alt=""
-            loading="lazy"
-            className="h-12 w-12 object-contain shrink-0"
-          />
-          <div className="min-w-0 flex-1 pr-20">
-            <p className="text-[10px] text-muted-foreground font-mono">
-              #{String(id).padStart(4, "0")}
-            </p>
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-sm font-display font-semibold truncate">
-                {formatName(name)}
-              </p>
+          <div className="relative">
+            <img
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`}
+              alt=""
+              loading="lazy"
+              className="h-12 w-12 object-contain shrink-0"
+            />
+            <div className="absolute -top-0.5 -left-0.5">
               <SmogonTierBadge pokemonId={id} />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1 pr-20">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] text-muted-foreground font-mono">
+                #{String(id).padStart(4, "0")}
+              </p>
               {bst != null && (() => {
                 const ratio = Math.min(1, Math.max(0, bst / 720));
                 const hue = ratio <= 0.5 ? ratio * 2 * 120 : 120 + (ratio - 0.5) * 2 * 120;
@@ -389,6 +390,9 @@ const PokedexRow = ({ id, name, fav, inTeam, buildCount, isFull, showBst, onTogg
                 );
               })()}
             </div>
+            <p className="text-sm font-display font-semibold truncate">
+              {formatName(name)}
+            </p>
             <RowTypes types={types} />
           </div>
         </div>
